@@ -42,6 +42,10 @@ const data: { user: Record<string, string>; main: TNavMainData[] } = {
           name: "Exchange Rates",
           url: "/dashboard/exchange-rates",
         },
+        {
+          name: "Networks",
+          url: "/dashboard/networks",
+        },
       ],
     },
     {

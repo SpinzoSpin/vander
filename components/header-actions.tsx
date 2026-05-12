@@ -1,14 +1,14 @@
 "use client"
 
 import * as React from "react"
+import { useSession } from "next-auth/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowUpDownIcon,
-  Notification03Icon,
   ChevronDown,
   Notification01Icon,
 } from "@hugeicons/core-free-icons"
-import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function ExchangeRatePill() {
   const [isUsdtFirst, setIsUsdtFirst] = React.useState(true)
@@ -41,6 +41,12 @@ export function ExchangeRatePill() {
 }
 
 export function HeaderActions() {
+  const { data: session, status } = useSession()
+  const isLoading = status === "loading"
+  const user = session?.user
+
+  console.log({ user, status })
+
   return (
     <div className="flex items-center gap-4">
       <ExchangeRatePill />
@@ -52,13 +58,22 @@ export function HeaderActions() {
       </button>
 
       <div className="flex items-center gap-3 pl-1">
-        <div className="flex flex-col items-end gap-0.5">
-          <span className="text-[13px] leading-none font-bold text-white">
-            admin@vault.io
-          </span>
-          <span className="text-[11px] leading-none font-semibold text-muted-foreground">
-            Admin
-          </span>
+        <div className="flex flex-col items-end gap-1">
+          {isLoading ? (
+            <>
+              <Skeleton className="h-3 w-24 bg-white/10" />
+              <Skeleton className="h-2.5 w-12 bg-white/5" />
+            </>
+          ) : (
+            <>
+              <span className="text-[13px] leading-none font-bold text-white">
+                {user?.email || "Unknown User"}
+              </span>
+              <span className="text-[11px] leading-none font-semibold text-muted-foreground capitalize">
+                {(user as any)?.role || "User"}
+              </span>
+            </>
+          )}
         </div>
         <button className="flex items-center justify-center text-muted-foreground/60 transition-colors hover:text-white">
           <HugeiconsIcon icon={ChevronDown} size={16} strokeWidth={2.5} />

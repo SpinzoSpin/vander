@@ -49,13 +49,6 @@ const columns: ColumnDef<OnrampTransaction>[] = [
     },
   },
   {
-    accessorKey: "confirmArrivalAction",
-    header: "CONFIRM ARRIVAL ACTION",
-    cell: ({ row }) => (
-      <span className="text-xs">{row.getValue("confirmArrivalAction")}</span>
-    ),
-  },
-  {
     accessorKey: "totalAmountSent",
     header: "TOTAL AMOUNT SENT",
     cell: ({ row }) => (
@@ -81,6 +74,13 @@ const columns: ColumnDef<OnrampTransaction>[] = [
     header: "PROFIT PERCENTAGE",
     cell: ({ row }) => (
       <span className="text-xs">{row.getValue("profitPercentage")}</span>
+    ),
+  },
+  {
+    accessorKey: "confirmArrivalAction",
+    header: "CONFIRM ARRIVAL ACTION",
+    cell: ({ row }) => (
+      <span className="text-xs">{row.getValue("confirmArrivalAction")}</span>
     ),
   },
 ]

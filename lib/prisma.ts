@@ -1,18 +1,9 @@
-import { PrismaClient } from "../generated/prisma/client"
-import { withAccelerate } from "@prisma/extension-accelerate"
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../generated/prisma/client";
 
-const prismaClientFactory = () => {
-    return new PrismaClient({
-        accelerateUrl: process.env.DATABASE_URL,
-    }).$extends(withAccelerate())
-}
+const connectionString = `${process.env.DATABASE_URL}`;
 
-type PrismaClientExtended = ReturnType<typeof prismaClientFactory>
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });
 
-const globalForPrisma = globalThis as unknown as {
-    prisma: PrismaClientExtended | undefined
-}
-
-export const prisma = globalForPrisma.prisma ?? prismaClientFactory()
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
+export { prisma };

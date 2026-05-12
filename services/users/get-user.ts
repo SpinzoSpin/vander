@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt"
 
-export async function getUser(email: string, pwHash: string) {
+export async function getUser(email: string, password: string) {
     const result = await prisma.user.findUnique({
         where: {
             email
@@ -10,9 +10,9 @@ export async function getUser(email: string, pwHash: string) {
 
     if (!result) return null
 
-    const isPasswordMatch = bcrypt.compareSync(pwHash, result.password)
+    const isPasswordMatch = bcrypt.compareSync(password, result.password)
 
     if (!isPasswordMatch) return null
 
     return result
-}
+}

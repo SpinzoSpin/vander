@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -12,20 +7,28 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  gic
+  admin
+  user
+  lotto
+  arca
+}
+
 model User {
   id            String          @id @default(cuid())
   name          String?
   email         String          @unique
-  password      String
   emailVerified DateTime?
   image         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  password      String
+  role          Role
+  permission    Json[]
   accounts      Account[]
-  sessions      Session[]
-  // Optional for WebAuthn support
   Authenticator Authenticator[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sessions      Session[]
 }
 
 model Account {
@@ -40,11 +43,9 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
 }
@@ -53,10 +54,9 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model VerificationToken {
@@ -67,7 +67,6 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-// Optional for WebAuthn support
 model Authenticator {
   credentialID         String  @unique
   userId               String
@@ -77,8 +76,120 @@ model Authenticator {
   credentialDeviceType String
   credentialBackedUp   Boolean
   transports           String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
+}
+
+model treasury {
+  id                    Int       @id @default(autoincrement())
+  wallet_address        String    @db.VarChar
+  network_id            Int
+  current_balance       Decimal?  @db.Decimal
+  latest_transaction_at DateTime? @db.Timestamptz(3)
+  updated_at            DateTime  @default(now()) @db.Timestamptz(3)
+  created_at            DateTime  @default(now()) @db.Timestamptz(3)
+  private_key           String?   @db.VarChar
+  wallet_name           String    @db.VarChar
+}
+
+model transactions {
+  id                                  Int                      @id @default(autoincrement())
+  batch_id                            Int?
+  amount_php                          Decimal                  @db.Decimal
+  amount_usdt                         Decimal?                 @db.Decimal
+  gas_fee                             Decimal?                 @db.Decimal
+  network_id                          Int
+  status                              enum_transactions_status @default(pending)
+  fiat_settlement_id                  String?                  @db.VarChar
+  updated_at                          DateTime                 @default(now()) @db.Timestamptz(3)
+  created_at                          DateTime                 @default(now()) @db.Timestamptz(3)
+  type                                enum_transactions_type   @default(fiat_to_crypto)
+  treasury_id                         Int
+  target_address                      String?                  @db.VarChar
+  tx_hash                             String?                  @db.VarChar
+  fail_reason                         String?                  @db.VarChar
+  profit                              Decimal?                 @default(0) @db.Decimal
+  amount_usdt_original                Decimal?                 @db.Decimal
+  exchange_rate_id                    Int
+  order_id                            String?                  @db.VarChar
+  bank_details                        String?                  @db.VarChar
+  received_record_id                  Int?
+  sending_record_id                   Int?
+  notes                               String?                  @db.VarChar
+  invoice_image_id                    Int?
+  usdt_to_php_reference_rate_snapshot Decimal?                 @db.Decimal
+  usdt_to_php_rate_snapshot           Decimal?                 @db.Decimal
+  php_to_usdt_reference_rate_snapshot Decimal?                 @db.Decimal
+  php_to_usdt_rate_snapshot           Decimal?                 @db.Decimal
+  rate_snapshot                       Decimal?                 @db.Decimal
+  reference_rate_snapshot             Decimal?                 @db.Decimal
+  applied_rate_snapshot               Decimal?                 @db.Decimal
+}
+
+model networks {
+  id                    Int                        @id @default(autoincrement())
+  name                  String                     @db.VarChar
+  symbol                String                     @db.VarChar
+  is_active             Boolean?                   @default(true)
+  updated_at            DateTime                   @default(now()) @db.Timestamptz(3)
+  created_at            DateTime                   @default(now()) @db.Timestamptz(3)
+  network_type          enum_networks_network_type
+  usdt_contract_address String                     @db.VarChar
+  gas_fee_token_name    String                     @db.VarChar
+  rpc_url               String                     @db.VarChar
+  usdt_decimals         Decimal                    @default(6) @db.Decimal
+}
+
+model exchange_rates {
+  id                            Int      @id @default(autoincrement())
+  pair                          String   @default("USDT/PHP") @db.VarChar
+  usdt_to_php_rate              Decimal  @db.Decimal
+  php_to_usdt_rate              Decimal  @db.Decimal
+  usdt_to_php_markup_percentage Decimal? @default(0) @db.Decimal
+  php_to_usdt_markup_percentage Decimal? @default(0) @db.Decimal
+  is_active                     Boolean? @default(true)
+  updated_at                    DateTime @default(now()) @db.Timestamptz(3)
+  created_at                    DateTime @default(now()) @db.Timestamptz(3)
+  usdt_to_php_reference_rate    Decimal  @db.Decimal
+  usdt_to_php_spread            Decimal? @db.Decimal
+  usdt_to_php_spread_percentage Decimal? @db.Decimal
+  php_to_usdt_reference_rate    Decimal  @db.Decimal
+  php_to_usdt_spread            Decimal? @db.Decimal
+  php_to_usdt_spread_percentage Decimal? @db.Decimal
+}
+
+model media {
+  id              Int      @id @default(autoincrement())
+  alt             String   @db.VarChar
+  updated_at      DateTime @default(now()) @db.Timestamptz(3)
+  created_at      DateTime @default(now()) @db.Timestamptz(3)
+  url             String?  @db.VarChar
+  thumbnail_u_r_l String?  @db.VarChar
+  filename        String?  @db.VarChar
+  mime_type       String?  @db.VarChar
+  filesize        Decimal? @db.Decimal
+  width           Decimal? @db.Decimal
+  height          Decimal? @db.Decimal
+  focal_x         Decimal? @db.Decimal
+  focal_y         Decimal? @db.Decimal
+}
+
+enum enum_transactions_status {
+  pending
+  confirmed
+  processing
+  complete
+  fiat_arrival
+  crypto_arrival
+}
+
+enum enum_transactions_type {
+  fiat_to_crypto
+  crypto_to_fiat
+}
+
+enum enum_networks_network_type {
+  mainnet
+  testnet
 }

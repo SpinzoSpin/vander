@@ -1,16 +1,17 @@
-import { Manrope } from "next/font/google";
+import { Manrope } from "next/font/google"
 
-import { ThemeProvider } from "@/components/theme-provider";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
+import "./globals.css"
+import { SessionProvider } from "next-auth/react"
 
 const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-manrope",
   display: "swap",
-});
+})
 
 export default function RootLayout({
   children,
@@ -31,7 +32,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TooltipProvider>
-            {children}
+            <SessionProvider refetchOnWindowFocus>{children}</SessionProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>

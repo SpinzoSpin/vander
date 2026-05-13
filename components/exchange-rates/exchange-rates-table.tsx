@@ -3,6 +3,14 @@
 import { type ColumnDef } from "@tanstack/react-table"
 
 import { DataTable } from "@/components/data-table"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useSearchParams, useRouter } from "next/navigation"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { MoreHorizontalCircle01Icon } from "@hugeicons/core-free-icons"
+import { deleteExchangeRateAction } from "@/app/dashboard/exchange-rates/actions"
+import { toast } from "sonner"
 
 export interface ExchangeRate {
   id: string
@@ -78,14 +86,75 @@ const columns: ColumnDef<ExchangeRate>[] = [
       )
     },
   },
+  {
+    id: "actions",
+    cell: ({ row }) => <ExchangeRateActions row={row} />,
+  },
 ]
 
-export function ExchangeRatesTable({ data }: ExchangeRatesTableProps) {
+function ExchangeRateActions({ row }: { row: any }) {
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const rate = row.original as ExchangeRate
+
+  const handleDelete = async () => {
+    if (confirm(`Are you sure you want to delete this exchange rate?`)) {
+      const res = await deleteExchangeRateAction(rate.id)
+      if (res.success) {
+        toast.success(res.message)
+        queryClient.invalidateQueries({ queryKey: ["exchange-rates"] })
+      } else {
+        toast.error(res.message)
+      }
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <HugeiconsIcon icon={MoreHorizontalCircle01Icon} className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => router.push(`/dashboard/exchange-rates/${rate.id}/edit`)}>
+          Edit Rate
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDelete} className="text-red-500 focus:text-red-500">
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export function ExchangeRatesTable({ data: initialData }: ExchangeRatesTableProps) {
+  const searchParams = useSearchParams()
+  const q = searchParams.get("q") || ""
+  const filter = searchParams.get("filter") || ""
+  const currency = searchParams.get("currency") || ""
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["exchange-rates", q, filter, currency],
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      if (q) params.append("q", q)
+      if (filter) params.append("filter", filter)
+      if (currency) params.append("currency", currency)
+      
+      const res = await fetch(`/api/exchange-rate?${params.toString()}`)
+      const json = await res.json()
+      return json.data as ExchangeRate[]
+    },
+    initialData,
+  })
+
   return (
     <DataTable
       columns={columns}
-      data={data}
-      emptyMessage="No exchange rates in this period"
+      data={data || []}
+      emptyMessage={isLoading ? "Loading exchange rates..." : "No exchange rates found"}
       pageSize={10}
     />
   )

@@ -91,6 +91,7 @@ model treasury {
   created_at            DateTime  @default(now()) @db.Timestamptz(3)
   private_key           String?   @db.VarChar
   wallet_name           String    @db.VarChar
+  network               networks  @relation(fields: [network_id], references: [id])
 }
 
 model transactions {
@@ -139,6 +140,7 @@ model networks {
   gas_fee_token_name    String                     @db.VarChar
   rpc_url               String                     @db.VarChar
   usdt_decimals         Decimal                    @default(6) @db.Decimal
+  treasuries            treasury[]
 }
 
 model exchange_rates {

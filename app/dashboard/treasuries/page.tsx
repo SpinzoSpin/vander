@@ -1,15 +1,15 @@
 import { Suspense } from "react"
 import { ActionsContainer } from "@/components/actions-container"
 import {
-  ExchangeRatesTable,
-  type ExchangeRate,
-} from "@/components/exchange-rates"
+  TreasuriesTable,
+  type Treasury,
+} from "@/components/treasuries"
 import { Button } from "@/components/ui/button"
-
 import { Add01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { getExchangeRates } from "@/services/exchange-rates/get-rates"
+import { getTreasuries } from "@/services/treasuries/get-treasuries"
+import { format } from "date-fns"
 
 export default async function Page(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const searchParams = await props.searchParams
@@ -17,17 +17,15 @@ export default async function Page(props: { searchParams: Promise<{ [key: string
   const filter = typeof searchParams.filter === 'string' ? searchParams.filter : undefined
   const currency = typeof searchParams.currency === 'string' ? searchParams.currency : undefined
 
-  const dbRates = await getExchangeRates({ q, filter, currency })
+  const dbTreasuries = await getTreasuries({ q, filter, currency })
 
-  const mappedData: ExchangeRate[] = dbRates.map(r => ({
-    id: r.id.toString(),
-    currencyPair: r.pair,
-    usdtPhpRefRate: r.usdt_to_php_reference_rate.toString(),
-    usdtPhpFinalRate: r.usdt_to_php_rate.toString(),
-    usdtPhpProfitSpread: r.usdt_to_php_spread?.toString() || "0",
-    phpUsdtRefRate: r.php_to_usdt_reference_rate.toString(),
-    phpUsdtRate: r.php_to_usdt_rate.toString(),
-    active: r.is_active || false,
+  const mappedData: Treasury[] = dbTreasuries.map(t => ({
+    id: t.id.toString(),
+    walletName: t.wallet_name,
+    walletAddress: t.wallet_address,
+    network: t.network.name,
+    currentBalance: t.current_balance?.toString() || "0.00",
+    latestTransactionAt: t.latest_transaction_at ? format(new Date(t.latest_transaction_at), "MMM d, yyyy h:mm a") : "-",
   }))
 
   return (
@@ -37,7 +35,7 @@ export default async function Page(props: { searchParams: Promise<{ [key: string
           {/* Header row */}
           <div className="flex items-center justify-between">
             <p className="text-base font-semibold text-[#ededed]">
-              Exchange Rates List
+              Treasuries List
             </p>
             <div className="flex items-center gap-3">
               <Suspense>
@@ -48,7 +46,7 @@ export default async function Page(props: { searchParams: Promise<{ [key: string
                 />
               </Suspense>
               <Button variant="outline" asChild>
-                <Link href={"/dashboard/exchange-rates/create"}>
+                <Link href={"/dashboard/treasuries/create"}>
                   Create New
                   <HugeiconsIcon icon={Add01Icon} />
                 </Link>
@@ -58,7 +56,7 @@ export default async function Page(props: { searchParams: Promise<{ [key: string
 
           {/* Table */}
           <Suspense>
-            <ExchangeRatesTable data={mappedData} />
+            <TreasuriesTable data={mappedData} />
           </Suspense>
         </div>
       </div>

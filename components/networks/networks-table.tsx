@@ -1,7 +1,7 @@
 "use client"
 
 import { type ColumnDef } from "@tanstack/react-table"
-import { tokenIcons } from "@web3icons/react"
+import { networkIcons } from "@web3icons/react"
 
 import { DataTable } from "@/components/data-table"
 import { Switch } from "@/components/ui/switch"
@@ -44,10 +44,17 @@ const columns: ColumnDef<Network>[] = [
     header: "SYMBOL",
     cell: ({ row }) => {
       const symbol = row.getValue("symbol") as string
-      // Dynamically get the Icon component from tokenIcons based on the symbol string.
-      // E.g., 'TRX' -> tokenIcons.TokenTRX
-      const iconKey = `Token${symbol.toUpperCase()}`
-      const IconComponent = (tokenIcons as any)[iconKey]
+      const networkName = row.getValue("networkName") as string
+
+      // Format the network name (e.g. "Binance Smart Chain" -> "BinanceSmartChain")
+      const formattedName = networkName
+        .split(/[- ]+/)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join("")
+
+      // Dynamically get the Icon component from networkIcons
+      const iconKey = `Network${formattedName}`
+      const IconComponent = (networkIcons as any)[iconKey]
 
       return (
         <div className="flex items-center gap-2">

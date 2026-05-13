@@ -11,11 +11,14 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { editExchangeRateAction } from "../../actions"
+import { useTransition } from "react"
 
 const roundToSixDecimals = (value: number) => Math.round(value * 1000000) / 1000000
 const roundToTwoDecimals = (value: number) => Math.round(value * 100) / 100
 
 const formSchema = z.object({
+  id: z.coerce.number(),
   usdtToPhpReferenceRate: z.coerce.number(),
   usdtToPhpRate: z.coerce.number(),
   usdtToPhpSpread: z.coerce.number(),
@@ -33,25 +36,27 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-export default function CreateExchangeRatePage() {
+export function EditExchangeRateForm({ rate }: { rate: any }) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
-  const { register, handleSubmit, setValue, watch, formState: { isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
-      usdtToPhpReferenceRate: 60.04,
-      usdtToPhpMarkupPercentage: 0.23,
-      usdtToPhpRate: 59.9,
-      usdtToPhpSpread: 0.14,
-      usdtToPhpSpreadPercentage: 0.23,
+      id: rate.id,
+      usdtToPhpReferenceRate: Number(rate.usdtToPhpReferenceRate),
+      usdtToPhpMarkupPercentage: Number(rate.usdtToPhpSpreadPercentage), // using spread % as markup
+      usdtToPhpRate: Number(rate.usdtToPhpRate),
+      usdtToPhpSpread: Number(rate.usdtToPhpSpread),
+      usdtToPhpSpreadPercentage: Number(rate.usdtToPhpSpreadPercentage),
       
-      phpToUsdtReferenceRate: 0.01669,
-      phpToUsdtMarkupPercentage: 1,
-      phpToUsdtRate: 0.016523,
-      phpToUsdtSpread: 0.000167,
-      phpToUsdtSpreadPercentage: 1,
+      phpToUsdtReferenceRate: Number(rate.phpToUsdtReferenceRate),
+      phpToUsdtMarkupPercentage: Number(rate.phpToUsdtSpreadPercentage),
+      phpToUsdtRate: Number(rate.phpToUsdtRate),
+      phpToUsdtSpread: Number(rate.phpToUsdtSpread),
+      phpToUsdtSpreadPercentage: Number(rate.phpToUsdtSpreadPercentage),
       
-      isActive: true,
+      isActive: rate.isActive,
     }
   })
 
@@ -62,7 +67,7 @@ export default function CreateExchangeRatePage() {
   const usdtToPhpSpread = watch("usdtToPhpSpread")
   const usdtToPhpSpreadPercentage = watch("usdtToPhpSpreadPercentage")
 
-  const phpToUsdtReferenceRate = watch("usdtToPhpReferenceRate")
+  const phpToUsdtReferenceRate = watch("phpToUsdtReferenceRate")
   const phpToUsdtMarkupPercentage = watch("phpToUsdtMarkupPercentage")
   const phpToUsdtRate = watch("phpToUsdtRate")
   const phpToUsdtSpread = watch("phpToUsdtSpread")
@@ -72,15 +77,15 @@ export default function CreateExchangeRatePage() {
 
   // Handlers for USDT -> PHP
   const updateUsdtToPhpFromMarkup = (ref: number, markup: number) => {
-    const rate = roundToSixDecimals(ref * (1 - markup / 100))
-    const diff = Math.abs(ref - rate)
-    setValue("usdtToPhpRate", rate, { shouldValidate: true })
+    const calculatedRate = roundToSixDecimals(ref * (1 - markup / 100))
+    const diff = Math.abs(ref - calculatedRate)
+    setValue("usdtToPhpRate", calculatedRate, { shouldValidate: true })
     setValue("usdtToPhpSpread", roundToSixDecimals(diff), { shouldValidate: true })
     setValue("usdtToPhpSpreadPercentage", roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0), { shouldValidate: true })
   }
 
-  const updateUsdtToPhpFromRate = (ref: number, rate: number) => {
-    const diff = Math.abs(ref - rate)
+  const updateUsdtToPhpFromRate = (ref: number, newRate: number) => {
+    const diff = Math.abs(ref - newRate)
     const markup = ref > 0 ? (diff / ref) * 100 : 0
     setValue("usdtToPhpMarkupPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
     setValue("usdtToPhpSpread", roundToSixDecimals(diff), { shouldValidate: true })
@@ -89,56 +94,48 @@ export default function CreateExchangeRatePage() {
 
   // Handlers for PHP -> USDT
   const updatePhpToUsdtFromMarkup = (ref: number, markup: number) => {
-    const rate = roundToSixDecimals(ref * (1 - markup / 100))
-    const diff = Math.abs(ref - rate)
-    setValue("phpToUsdtRate", rate, { shouldValidate: true })
+    const calculatedRate = roundToSixDecimals(ref * (1 - markup / 100))
+    const diff = Math.abs(ref - calculatedRate)
+    setValue("phpToUsdtRate", calculatedRate, { shouldValidate: true })
     setValue("phpToUsdtSpread", roundToSixDecimals(diff), { shouldValidate: true })
     setValue("phpToUsdtSpreadPercentage", roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0), { shouldValidate: true })
   }
 
-  const updatePhpToUsdtFromRate = (ref: number, rate: number) => {
-    const diff = Math.abs(ref - rate)
+  const updatePhpToUsdtFromRate = (ref: number, newRate: number) => {
+    const diff = Math.abs(ref - newRate)
     const markup = ref > 0 ? (diff / ref) * 100 : 0
     setValue("phpToUsdtMarkupPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
     setValue("phpToUsdtSpread", roundToSixDecimals(diff), { shouldValidate: true })
     setValue("phpToUsdtSpreadPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
   }
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      // Create payload that matches our ManualRates interface
-      const payload = {
-        usdtToPhpReferenceRate: data.usdtToPhpReferenceRate,
-        usdtToPhpRate: data.usdtToPhpRate,
-        usdtToPhpSpread: data.usdtToPhpSpread,
-        usdtToPhpSpreadPercentage: data.usdtToPhpSpreadPercentage,
-        phpToUsdtReferenceRate: data.phpToUsdtReferenceRate,
-        phpToUsdtRate: data.phpToUsdtRate,
-        phpToUsdtSpread: data.phpToUsdtSpread,
-        phpToUsdtSpreadPercentage: data.phpToUsdtSpreadPercentage,
-        isActive: data.isActive,
-      }
+  const onSubmit = (data: FormData) => {
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.append("id", data.id.toString())
+      formData.append("usdtToPhpReferenceRate", data.usdtToPhpReferenceRate.toString())
+      formData.append("usdtToPhpRate", data.usdtToPhpRate.toString())
+      formData.append("usdtToPhpSpread", data.usdtToPhpSpread.toString())
+      formData.append("usdtToPhpSpreadPercentage", data.usdtToPhpSpreadPercentage.toString())
+      formData.append("phpToUsdtReferenceRate", data.phpToUsdtReferenceRate.toString())
+      formData.append("phpToUsdtRate", data.phpToUsdtRate.toString())
+      formData.append("phpToUsdtSpread", data.phpToUsdtSpread.toString())
+      formData.append("phpToUsdtSpreadPercentage", data.phpToUsdtSpreadPercentage.toString())
+      formData.append("isActive", data.isActive ? "on" : "off")
 
-      const res = await fetch("/api/exchange-rate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-
-      const result = await res.json()
-      if (result.success) {
-        toast.success("Exchange rate created successfully")
+      const res = await editExchangeRateAction(null, formData)
+      
+      if (res.success) {
+        toast.success("Exchange rate updated successfully")
         router.push("/dashboard/exchange-rates")
       } else {
-        toast.error(result.message || "Failed to create exchange rate")
+        toast.error(res.message || "Failed to update exchange rate")
       }
-    } catch (e) {
-      toast.error("An error occurred")
-    }
+    })
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col p-8 text-[#ededed]">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col text-[#ededed]">
       {/* Sub Header */}
       <div className="mb-8 flex items-center justify-between border-b border-[#282828] pb-4">
         <div className="flex gap-4 text-xs text-[#4e4e4e]">
@@ -147,17 +144,10 @@ export default function CreateExchangeRatePage() {
         <div className="flex items-center gap-2">
           <Button 
             type="submit"
-            disabled={isSubmitting}
+            disabled={isPending}
             className="h-8 border border-[#282828] bg-[#1e1e1e] px-4 text-[#ededed] hover:bg-[#2a2a2a]"
           >
-            {isSubmitting ? "Saving..." : "Save"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="flex h-8 w-8 items-center justify-center border-[#282828] bg-[#1e1e1e] p-0"
-          >
-            &#8942;
+            {isPending ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>

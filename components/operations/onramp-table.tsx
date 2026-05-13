@@ -1,26 +1,33 @@
 "use client"
 
 import { type ColumnDef } from "@tanstack/react-table"
+import { useQuery } from "@tanstack/react-query"
+import { useSearchParams } from "next/navigation"
 
-import { cn } from "@/lib/utils"
+import { TransactionStatusChip } from "@/components/operations/transaction-status-chip"
+import { Button } from "@/components/ui/button"
+import { UploadInvoiceModal } from "@/components/operations/upload-invoice-modal"
 
 import { DataTable } from "../data-table"
 
 export interface OnrampTransaction {
   id: string
+  orderId: string
   type: string
-  status: "completed" | "pending" | "failed"
-  confirmArrivalAction: string
+  status:
+    | "pending"
+    | "confirmed"
+    | "processing"
+    | "complete"
+    | "fiat_arrival"
+    | "crypto_arrival"
   totalAmountSent: string
   totalReceived: string
   profitUsdt: string
   profitPercentage: string
-}
-
-const STATUS_STYLES: Record<OnrampTransaction["status"], string> = {
-  completed: "text-[#83b047]",
-  pending: "text-[#e38752]",
-  failed: "text-[#e05252]",
+  targetAddress: string
+  txHash: string
+  createdAt: string
 }
 
 const columns: ColumnDef<OnrampTransaction>[] = [
@@ -32,21 +39,20 @@ const columns: ColumnDef<OnrampTransaction>[] = [
     ),
   },
   {
-    accessorKey: "type",
-    header: "TRANSACTION TYPE",
-    cell: ({ row }) => <span className="text-xs">{row.getValue("type")}</span>,
+    accessorKey: "orderId",
+    header: "ORDER ID",
+    cell: ({ row }) => (
+      <span className="font-mono text-xs text-[#4e4e4e]">
+        {(row.getValue("orderId") as string).slice(0, 8)}...
+      </span>
+    ),
   },
   {
     accessorKey: "status",
     header: "STATUS",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as OnrampTransaction["status"]
-      return (
-        <span className={cn("text-xs font-medium", STATUS_STYLES[status])}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </span>
-      )
-    },
+    cell: ({ row }) => (
+      <TransactionStatusChip status={row.getValue("status") as string} />
+    ),
   },
   {
     accessorKey: "totalAmountSent",
@@ -77,20 +83,55 @@ const columns: ColumnDef<OnrampTransaction>[] = [
     ),
   },
   {
-    accessorKey: "confirmArrivalAction",
-    header: "CONFIRM ARRIVAL ACTION",
+    id: "confirmAsSending",
+    header: "CONFIRM AS SENDING",
     cell: ({ row }) => (
-      <span className="text-xs">{row.getValue("confirmArrivalAction")}</span>
+      <UploadInvoiceModal transactionId={row.original.id}>
+        <Button
+          variant="outline"
+          size="xs"
+          id={`upload-invoice-${row.original.id}`}
+        >
+          Upload Invoice
+        </Button>
+      </UploadInvoiceModal>
     ),
   },
 ]
 
-export function OnrampTable() {
+interface OnrampTableProps {
+  data?: OnrampTransaction[]
+}
+
+export function OnrampTable({ data: initialData = [] }: OnrampTableProps) {
+  const searchParams = useSearchParams()
+  const q = searchParams.get("q") || ""
+  const filter = searchParams.get("filter") || ""
+  const currency = searchParams.get("currency") || ""
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["transactions", "fiat_to_crypto", q, filter, currency],
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      params.append("type", "fiat_to_crypto")
+      if (q) params.append("q", q)
+      if (filter) params.append("filter", filter)
+      if (currency) params.append("currency", currency)
+
+      const res = await fetch(`/api/transactions?${params.toString()}`)
+      const json = await res.json()
+      return json.data as OnrampTransaction[]
+    },
+    initialData: initialData.length > 0 ? initialData : undefined,
+  })
+
   return (
     <DataTable
       columns={columns}
-      data={[]}
-      emptyMessage="No treasuries in this period"
+      data={data || []}
+      emptyMessage={
+        isLoading ? "Loading transactions..." : "No transactions in this period"
+      }
       pageSize={10}
     />
   )

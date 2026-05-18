@@ -23,13 +23,15 @@ const formSchema = z.object({
   usdtToPhpRate: z.coerce.number(),
   usdtToPhpSpread: z.coerce.number(),
   usdtToPhpSpreadPercentage: z.coerce.number(),
-  usdtToPhpMarkupPercentage: z.coerce.number(),
+  usdtToPhpSpinzoFee: z.coerce.number(),
+  usdtToPhpGicFee: z.coerce.number(),
   
   phpToUsdtReferenceRate: z.coerce.number(),
   phpToUsdtRate: z.coerce.number(),
   phpToUsdtSpread: z.coerce.number(),
   phpToUsdtSpreadPercentage: z.coerce.number(),
-  phpToUsdtMarkupPercentage: z.coerce.number(),
+  phpToUsdtSpinzoFee: z.coerce.number(),
+  phpToUsdtGicFee: z.coerce.number(),
   
   isActive: z.boolean(),
 })
@@ -45,16 +47,18 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
     defaultValues: {
       id: rate.id,
       usdtToPhpReferenceRate: Number(rate.usdtToPhpReferenceRate),
-      usdtToPhpMarkupPercentage: Number(rate.usdtToPhpSpreadPercentage), // using spread % as markup
-      usdtToPhpRate: Number(rate.usdtToPhpRate),
-      usdtToPhpSpread: Number(rate.usdtToPhpSpread),
-      usdtToPhpSpreadPercentage: Number(rate.usdtToPhpSpreadPercentage),
+      usdtToPhpSpinzoFee: Number(rate.usdt_to_php_spinzo_fee || 0),
+      usdtToPhpGicFee: Number(rate.usdt_to_php_gic_fee || 0),
+      usdtToPhpRate: Number(rate.usdt_to_php_rate),
+      usdtToPhpSpread: Number(rate.usdt_to_php_spread),
+      usdtToPhpSpreadPercentage: Number(rate.usdt_to_php_spread_percentage),
       
-      phpToUsdtReferenceRate: Number(rate.phpToUsdtReferenceRate),
-      phpToUsdtMarkupPercentage: Number(rate.phpToUsdtSpreadPercentage),
-      phpToUsdtRate: Number(rate.phpToUsdtRate),
-      phpToUsdtSpread: Number(rate.phpToUsdtSpread),
-      phpToUsdtSpreadPercentage: Number(rate.phpToUsdtSpreadPercentage),
+      phpToUsdtReferenceRate: Number(rate.php_to_usdt_reference_rate),
+      phpToUsdtSpinzoFee: Number(rate.php_to_usdt_spinzo_fee || 0),
+      phpToUsdtGicFee: Number(rate.php_to_usdt_gic_fee || 0),
+      phpToUsdtRate: Number(rate.php_to_usdt_rate),
+      phpToUsdtSpread: Number(rate.php_to_usdt_spread),
+      phpToUsdtSpreadPercentage: Number(rate.php_to_usdt_spread_percentage),
       
       isActive: rate.isActive,
     }
@@ -62,13 +66,15 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
 
   // Watch current values to display in UI
   const usdtToPhpReferenceRate = watch("usdtToPhpReferenceRate")
-  const usdtToPhpMarkupPercentage = watch("usdtToPhpMarkupPercentage")
+  const usdtToPhpSpinzoFee = watch("usdtToPhpSpinzoFee")
+  const usdtToPhpGicFee = watch("usdtToPhpGicFee")
   const usdtToPhpRate = watch("usdtToPhpRate")
   const usdtToPhpSpread = watch("usdtToPhpSpread")
   const usdtToPhpSpreadPercentage = watch("usdtToPhpSpreadPercentage")
 
   const phpToUsdtReferenceRate = watch("phpToUsdtReferenceRate")
-  const phpToUsdtMarkupPercentage = watch("phpToUsdtMarkupPercentage")
+  const phpToUsdtSpinzoFee = watch("phpToUsdtSpinzoFee")
+  const phpToUsdtGicFee = watch("phpToUsdtGicFee")
   const phpToUsdtRate = watch("phpToUsdtRate")
   const phpToUsdtSpread = watch("phpToUsdtSpread")
   const phpToUsdtSpreadPercentage = watch("phpToUsdtSpreadPercentage")
@@ -76,37 +82,40 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
   const isActive = watch("isActive")
 
   // Handlers for USDT -> PHP
-  const updateUsdtToPhpFromMarkup = (ref: number, markup: number) => {
-    const calculatedRate = roundToSixDecimals(ref * (1 - markup / 100))
+  // Handlers for USDT -> PHP
+  const updateUsdtToPhpFromFees = (ref: number, spinzo: number, gic: number) => {
+    const calculatedRate = roundToSixDecimals(ref - spinzo - gic)
     const diff = Math.abs(ref - calculatedRate)
     setValue("usdtToPhpRate", calculatedRate, { shouldValidate: true })
     setValue("usdtToPhpSpread", roundToSixDecimals(diff), { shouldValidate: true })
     setValue("usdtToPhpSpreadPercentage", roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0), { shouldValidate: true })
   }
 
-  const updateUsdtToPhpFromRate = (ref: number, newRate: number) => {
+  const updateUsdtToPhpFromRate = (ref: number, newRate: number, currentGic: number) => {
+    const spinzo = ref - newRate - currentGic
     const diff = Math.abs(ref - newRate)
-    const markup = ref > 0 ? (diff / ref) * 100 : 0
-    setValue("usdtToPhpMarkupPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
+    setValue("usdtToPhpSpinzoFee", roundToSixDecimals(spinzo), { shouldValidate: true })
     setValue("usdtToPhpSpread", roundToSixDecimals(diff), { shouldValidate: true })
-    setValue("usdtToPhpSpreadPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
+    setValue("usdtToPhpSpreadPercentage", roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0), { shouldValidate: true })
   }
 
   // Handlers for PHP -> USDT
-  const updatePhpToUsdtFromMarkup = (ref: number, markup: number) => {
-    const calculatedRate = roundToSixDecimals(ref * (1 - markup / 100))
+  const updatePhpToUsdtFromFees = (ref: number, spinzo: number, gic: number) => {
+    // Proportional fee calculation (treating inputs as percentages to avoid subtracting flat fees from crypto decimals)
+    const calculatedRate = roundToSixDecimals(ref * (1 - (spinzo + gic) / 100))
     const diff = Math.abs(ref - calculatedRate)
     setValue("phpToUsdtRate", calculatedRate, { shouldValidate: true })
     setValue("phpToUsdtSpread", roundToSixDecimals(diff), { shouldValidate: true })
     setValue("phpToUsdtSpreadPercentage", roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0), { shouldValidate: true })
   }
 
-  const updatePhpToUsdtFromRate = (ref: number, newRate: number) => {
+  const updatePhpToUsdtFromRate = (ref: number, newRate: number, currentGic: number) => {
     const diff = Math.abs(ref - newRate)
-    const markup = ref > 0 ? (diff / ref) * 100 : 0
-    setValue("phpToUsdtMarkupPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
+    const totalMarkup = ref > 0 ? (diff / ref) * 100 : 0
+    const spinzo = totalMarkup - currentGic
+    setValue("phpToUsdtSpinzoFee", roundToTwoDecimals(spinzo), { shouldValidate: true })
     setValue("phpToUsdtSpread", roundToSixDecimals(diff), { shouldValidate: true })
-    setValue("phpToUsdtSpreadPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
+    setValue("phpToUsdtSpreadPercentage", roundToTwoDecimals(totalMarkup), { shouldValidate: true })
   }
 
   const onSubmit = (data: FormData) => {
@@ -115,10 +124,14 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
       formData.append("id", data.id.toString())
       formData.append("usdtToPhpReferenceRate", data.usdtToPhpReferenceRate.toString())
       formData.append("usdtToPhpRate", data.usdtToPhpRate.toString())
+      formData.append("usdtToPhpSpinzoFee", data.usdtToPhpSpinzoFee.toString())
+      formData.append("usdtToPhpGicFee", data.usdtToPhpGicFee.toString())
       formData.append("usdtToPhpSpread", data.usdtToPhpSpread.toString())
       formData.append("usdtToPhpSpreadPercentage", data.usdtToPhpSpreadPercentage.toString())
       formData.append("phpToUsdtReferenceRate", data.phpToUsdtReferenceRate.toString())
       formData.append("phpToUsdtRate", data.phpToUsdtRate.toString())
+      formData.append("phpToUsdtSpinzoFee", data.phpToUsdtSpinzoFee.toString())
+      formData.append("phpToUsdtGicFee", data.phpToUsdtGicFee.toString())
       formData.append("phpToUsdtSpread", data.phpToUsdtSpread.toString())
       formData.append("phpToUsdtSpreadPercentage", data.phpToUsdtSpreadPercentage.toString())
       formData.append("isActive", data.isActive ? "on" : "off")
@@ -191,7 +204,7 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
                 {...register("usdtToPhpReferenceRate", { 
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updateUsdtToPhpFromMarkup(val, usdtToPhpMarkupPercentage)
+                    updateUsdtToPhpFromFees(val, usdtToPhpSpinzoFee, usdtToPhpGicFee)
                   }
                 })}
               />
@@ -217,7 +230,7 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
                 {...register("usdtToPhpRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updateUsdtToPhpFromRate(usdtToPhpReferenceRate, val)
+                    updateUsdtToPhpFromRate(usdtToPhpReferenceRate, val, usdtToPhpGicFee)
                   }
                 })}
               />
@@ -227,29 +240,37 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-4">
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-4">
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">Markup %</Label>
+              <Label className="text-sm text-[#ededed]">Spinzo Fee (PHP)</Label>
               <Input
                 type="number"
                 step="any"
                 className="border-[#282828] bg-[#121212]"
-                {...register("usdtToPhpMarkupPercentage", {
+                {...register("usdtToPhpSpinzoFee", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updateUsdtToPhpFromMarkup(usdtToPhpReferenceRate, val)
+                    updateUsdtToPhpFromFees(usdtToPhpReferenceRate, val, usdtToPhpGicFee)
                   }
                 })}
               />
-              <div className="mt-1 flex flex-col gap-1">
-                <p className="text-xs text-[#4e4e4e]">
-                  Set the markup percentage to control your profit margin on
-                  this rate.
-                </p>
-                <p className="text-xs text-[#4e4e4e]">
-                  At {usdtToPhpMarkupPercentage}% markup: final rate is {usdtToPhpRate} (market/reference: {usdtToPhpReferenceRate}).
-                </p>
-              </div>
+            </div>
+            
+            <div className="mt-8 flex items-center justify-center text-[#4e4e4e] font-medium">+</div>
+            
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-[#ededed]">GIC Fee (PHP)</Label>
+              <Input
+                type="number"
+                step="any"
+                className="border-[#282828] bg-[#121212]"
+                {...register("usdtToPhpGicFee", {
+                  onChange: (e) => {
+                    const val = Number(e.target.value)
+                    updateUsdtToPhpFromFees(usdtToPhpReferenceRate, usdtToPhpSpinzoFee, val)
+                  }
+                })}
+              />
             </div>
 
             <div className="mt-8 flex items-center justify-center text-[#4e4e4e]">
@@ -300,7 +321,7 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
                 {...register("phpToUsdtReferenceRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updatePhpToUsdtFromMarkup(val, phpToUsdtMarkupPercentage)
+                    updatePhpToUsdtFromFees(val, phpToUsdtSpinzoFee, phpToUsdtGicFee)
                   }
                 })}
               />
@@ -326,7 +347,7 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
                 {...register("phpToUsdtRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updatePhpToUsdtFromRate(phpToUsdtReferenceRate, val)
+                    updatePhpToUsdtFromRate(phpToUsdtReferenceRate, val, phpToUsdtGicFee)
                   }
                 })}
               />
@@ -336,30 +357,37 @@ export function EditExchangeRateForm({ rate }: { rate: any }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-4">
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-4">
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">Markup %</Label>
+              <Label className="text-sm text-[#ededed]">Spinzo Fee (%)</Label>
               <Input
                 type="number"
                 step="any"
                 className="border-[#282828] bg-[#121212]"
-                {...register("phpToUsdtMarkupPercentage", {
+                {...register("phpToUsdtSpinzoFee", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updatePhpToUsdtFromMarkup(phpToUsdtReferenceRate, val)
+                    updatePhpToUsdtFromFees(phpToUsdtReferenceRate, val, phpToUsdtGicFee)
                   }
                 })}
               />
-              <div className="mt-1 flex flex-col gap-1">
-                <p className="text-xs text-[#4e4e4e]">
-                  Set the markup percentage to control your profit margin on
-                  this rate.
-                </p>
-                <p className="text-xs text-[#4e4e4e]">
-                  At {phpToUsdtMarkupPercentage}% markup: final rate is {phpToUsdtRate} (market/reference:
-                  {phpToUsdtReferenceRate}).
-                </p>
-              </div>
+            </div>
+
+            <div className="mt-8 flex items-center justify-center text-[#4e4e4e] font-medium">+</div>
+
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-[#ededed]">GIC Fee (%)</Label>
+              <Input
+                type="number"
+                step="any"
+                className="border-[#282828] bg-[#121212]"
+                {...register("phpToUsdtGicFee", {
+                  onChange: (e) => {
+                    const val = Number(e.target.value)
+                    updatePhpToUsdtFromFees(phpToUsdtReferenceRate, phpToUsdtSpinzoFee, val)
+                  }
+                })}
+              />
             </div>
 
             <div className="mt-8 flex items-center justify-center text-[#4e4e4e]">

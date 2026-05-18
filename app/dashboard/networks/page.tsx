@@ -1,4 +1,7 @@
 import { Suspense } from "react"
+import { auth } from "@/auth/auth"
+import { redirect } from "next/navigation"
+
 import { ActionsContainer } from "@/components/actions-container"
 import { Button } from "@/components/ui/button"
 
@@ -13,6 +16,12 @@ export default async function Page({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  const session = await auth()
+  const role = (session?.user as any)?.role?.toLowerCase()
+
+  if (role === "gic" || role === "lotto") {
+    redirect("/dashboard/operations/fiat-to-crypto")
+  }
   // Await search params for Next.js 15+ support
   const resolvedParams = await searchParams
 

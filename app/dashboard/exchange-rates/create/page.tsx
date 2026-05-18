@@ -12,7 +12,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
-const roundToSixDecimals = (value: number) => Math.round(value * 1000000) / 1000000
+const roundToSixDecimals = (value: number) =>
+  Math.round(value * 1000000) / 1000000
 const roundToTwoDecimals = (value: number) => Math.round(value * 100) / 100
 
 const formSchema = z.object({
@@ -20,14 +21,16 @@ const formSchema = z.object({
   usdtToPhpRate: z.coerce.number(),
   usdtToPhpSpread: z.coerce.number(),
   usdtToPhpSpreadPercentage: z.coerce.number(),
-  usdtToPhpMarkupPercentage: z.coerce.number(),
-  
+  usdtToPhpSpinzoFee: z.coerce.number(),
+  usdtToPhpGicFee: z.coerce.number(),
+
   phpToUsdtReferenceRate: z.coerce.number(),
   phpToUsdtRate: z.coerce.number(),
   phpToUsdtSpread: z.coerce.number(),
   phpToUsdtSpreadPercentage: z.coerce.number(),
-  phpToUsdtMarkupPercentage: z.coerce.number(),
-  
+  phpToUsdtSpinzoFee: z.coerce.number(),
+  phpToUsdtGicFee: z.coerce.number(),
+
   isActive: z.boolean(),
 })
 
@@ -36,72 +39,126 @@ type FormData = z.infer<typeof formSchema>
 export default function CreateExchangeRatePage() {
   const router = useRouter()
 
-  const { register, handleSubmit, setValue, watch, formState: { isSubmitting } } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { isSubmitting },
+  } = useForm<FormData>({
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
       usdtToPhpReferenceRate: 60.04,
-      usdtToPhpMarkupPercentage: 0.23,
+      usdtToPhpSpinzoFee: 0.23,
+      usdtToPhpGicFee: 0,
       usdtToPhpRate: 59.9,
       usdtToPhpSpread: 0.14,
       usdtToPhpSpreadPercentage: 0.23,
-      
+
       phpToUsdtReferenceRate: 0.01669,
-      phpToUsdtMarkupPercentage: 1,
+      phpToUsdtSpinzoFee: 1,
+      phpToUsdtGicFee: 0,
       phpToUsdtRate: 0.016523,
       phpToUsdtSpread: 0.000167,
       phpToUsdtSpreadPercentage: 1,
-      
+
       isActive: true,
-    }
+    },
   })
 
   // Watch current values to display in UI
   const usdtToPhpReferenceRate = watch("usdtToPhpReferenceRate")
-  const usdtToPhpMarkupPercentage = watch("usdtToPhpMarkupPercentage")
+  const usdtToPhpSpinzoFee = watch("usdtToPhpSpinzoFee")
+  const usdtToPhpGicFee = watch("usdtToPhpGicFee")
   const usdtToPhpRate = watch("usdtToPhpRate")
   const usdtToPhpSpread = watch("usdtToPhpSpread")
   const usdtToPhpSpreadPercentage = watch("usdtToPhpSpreadPercentage")
 
   const phpToUsdtReferenceRate = watch("usdtToPhpReferenceRate")
-  const phpToUsdtMarkupPercentage = watch("phpToUsdtMarkupPercentage")
+  const phpToUsdtSpinzoFee = watch("phpToUsdtSpinzoFee")
+  const phpToUsdtGicFee = watch("phpToUsdtGicFee")
   const phpToUsdtRate = watch("phpToUsdtRate")
   const phpToUsdtSpread = watch("phpToUsdtSpread")
   const phpToUsdtSpreadPercentage = watch("phpToUsdtSpreadPercentage")
-  
+
   const isActive = watch("isActive")
 
   // Handlers for USDT -> PHP
-  const updateUsdtToPhpFromMarkup = (ref: number, markup: number) => {
-    const rate = roundToSixDecimals(ref * (1 - markup / 100))
+  // Handlers for USDT -> PHP
+  const updateUsdtToPhpFromFees = (
+    ref: number,
+    spinzo: number,
+    gic: number
+  ) => {
+    const rate = roundToSixDecimals(ref - spinzo - gic)
     const diff = Math.abs(ref - rate)
     setValue("usdtToPhpRate", rate, { shouldValidate: true })
-    setValue("usdtToPhpSpread", roundToSixDecimals(diff), { shouldValidate: true })
-    setValue("usdtToPhpSpreadPercentage", roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0), { shouldValidate: true })
+    setValue("usdtToPhpSpread", roundToSixDecimals(diff), {
+      shouldValidate: true,
+    })
+    setValue(
+      "usdtToPhpSpreadPercentage",
+      roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0),
+      { shouldValidate: true }
+    )
   }
 
-  const updateUsdtToPhpFromRate = (ref: number, rate: number) => {
+  const updateUsdtToPhpFromRate = (
+    ref: number,
+    rate: number,
+    currentGic: number
+  ) => {
+    const spinzo = ref - rate - currentGic
     const diff = Math.abs(ref - rate)
-    const markup = ref > 0 ? (diff / ref) * 100 : 0
-    setValue("usdtToPhpMarkupPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
-    setValue("usdtToPhpSpread", roundToSixDecimals(diff), { shouldValidate: true })
-    setValue("usdtToPhpSpreadPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
+    setValue("usdtToPhpSpinzoFee", roundToSixDecimals(spinzo), {
+      shouldValidate: true,
+    })
+    setValue("usdtToPhpSpread", roundToSixDecimals(diff), {
+      shouldValidate: true,
+    })
+    setValue(
+      "usdtToPhpSpreadPercentage",
+      roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0),
+      { shouldValidate: true }
+    )
   }
 
   // Handlers for PHP -> USDT
-  const updatePhpToUsdtFromMarkup = (ref: number, markup: number) => {
-    const rate = roundToSixDecimals(ref * (1 - markup / 100))
+  const updatePhpToUsdtFromFees = (
+    ref: number,
+    spinzo: number,
+    gic: number
+  ) => {
+    const rate = roundToSixDecimals(ref * (1 - (spinzo + gic) / 100))
     const diff = Math.abs(ref - rate)
     setValue("phpToUsdtRate", rate, { shouldValidate: true })
-    setValue("phpToUsdtSpread", roundToSixDecimals(diff), { shouldValidate: true })
-    setValue("phpToUsdtSpreadPercentage", roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0), { shouldValidate: true })
+    setValue("phpToUsdtSpread", roundToSixDecimals(diff), {
+      shouldValidate: true,
+    })
+    setValue(
+      "phpToUsdtSpreadPercentage",
+      roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0),
+      { shouldValidate: true }
+    )
   }
 
-  const updatePhpToUsdtFromRate = (ref: number, rate: number) => {
+  const updatePhpToUsdtFromRate = (
+    ref: number,
+    rate: number,
+    currentGic: number
+  ) => {
     const diff = Math.abs(ref - rate)
-    const markup = ref > 0 ? (diff / ref) * 100 : 0
-    setValue("phpToUsdtMarkupPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
-    setValue("phpToUsdtSpread", roundToSixDecimals(diff), { shouldValidate: true })
-    setValue("phpToUsdtSpreadPercentage", roundToTwoDecimals(markup), { shouldValidate: true })
+    const totalMarkup = ref > 0 ? (diff / ref) * 100 : 0
+    const spinzo = totalMarkup - currentGic
+    setValue("phpToUsdtSpinzoFee", roundToTwoDecimals(spinzo), {
+      shouldValidate: true,
+    })
+    setValue("phpToUsdtSpread", roundToSixDecimals(diff), {
+      shouldValidate: true,
+    })
+    setValue("phpToUsdtSpreadPercentage", roundToTwoDecimals(totalMarkup), {
+      shouldValidate: true,
+    })
   }
 
   const onSubmit = async (data: FormData) => {
@@ -110,10 +167,14 @@ export default function CreateExchangeRatePage() {
       const payload = {
         usdtToPhpReferenceRate: data.usdtToPhpReferenceRate,
         usdtToPhpRate: data.usdtToPhpRate,
+        usdtToPhpSpinzoFee: data.usdtToPhpSpinzoFee,
+        usdtToPhpGicFee: data.usdtToPhpGicFee,
         usdtToPhpSpread: data.usdtToPhpSpread,
         usdtToPhpSpreadPercentage: data.usdtToPhpSpreadPercentage,
         phpToUsdtReferenceRate: data.phpToUsdtReferenceRate,
         phpToUsdtRate: data.phpToUsdtRate,
+        phpToUsdtSpinzoFee: data.phpToUsdtSpinzoFee,
+        phpToUsdtGicFee: data.phpToUsdtGicFee,
         phpToUsdtSpread: data.phpToUsdtSpread,
         phpToUsdtSpreadPercentage: data.phpToUsdtSpreadPercentage,
         isActive: data.isActive,
@@ -138,14 +199,17 @@ export default function CreateExchangeRatePage() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col p-8 text-[#ededed]">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-1 flex-col p-8 text-[#ededed]"
+    >
       {/* Sub Header */}
       <div className="mb-8 flex items-center justify-between border-b border-[#282828] pb-4">
         <div className="flex gap-4 text-xs text-[#4e4e4e]">
           <span>Draft configuration</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
+          <Button
             type="submit"
             disabled={isSubmitting}
             className="h-8 border border-[#282828] bg-[#1e1e1e] px-4 text-[#ededed] hover:bg-[#2a2a2a]"
@@ -198,11 +262,15 @@ export default function CreateExchangeRatePage() {
                 type="number"
                 step="any"
                 className="border-[#282828] bg-[#121212]"
-                {...register("usdtToPhpReferenceRate", { 
+                {...register("usdtToPhpReferenceRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updateUsdtToPhpFromMarkup(val, usdtToPhpMarkupPercentage)
-                  }
+                    updateUsdtToPhpFromFees(
+                      val,
+                      usdtToPhpSpinzoFee,
+                      usdtToPhpGicFee
+                    )
+                  },
                 })}
               />
               <p className="text-xs text-[#4e4e4e]">
@@ -227,8 +295,12 @@ export default function CreateExchangeRatePage() {
                 {...register("usdtToPhpRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updateUsdtToPhpFromRate(usdtToPhpReferenceRate, val)
-                  }
+                    updateUsdtToPhpFromRate(
+                      usdtToPhpReferenceRate,
+                      val,
+                      usdtToPhpGicFee
+                    )
+                  },
                 })}
               />
               <p className="text-xs text-[#4e4e4e]">
@@ -237,29 +309,47 @@ export default function CreateExchangeRatePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-4">
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-4">
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">Markup %</Label>
+              <Label className="text-sm text-[#ededed]">Spinzo Fee (PHP)</Label>
               <Input
                 type="number"
                 step="any"
                 className="border-[#282828] bg-[#121212]"
-                {...register("usdtToPhpMarkupPercentage", {
+                {...register("usdtToPhpSpinzoFee", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updateUsdtToPhpFromMarkup(usdtToPhpReferenceRate, val)
-                  }
+                    updateUsdtToPhpFromFees(
+                      usdtToPhpReferenceRate,
+                      val,
+                      usdtToPhpGicFee
+                    )
+                  },
                 })}
               />
-              <div className="mt-1 flex flex-col gap-1">
-                <p className="text-xs text-[#4e4e4e]">
-                  Set the markup percentage to control your profit margin on
-                  this rate.
-                </p>
-                <p className="text-xs text-[#4e4e4e]">
-                  At {usdtToPhpMarkupPercentage}% markup: final rate is {usdtToPhpRate} (market/reference: {usdtToPhpReferenceRate}).
-                </p>
-              </div>
+            </div>
+
+            <div className="mt-8 flex items-center justify-center font-medium text-[#4e4e4e]">
+              +
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-[#ededed]">GIC Fee (PHP)</Label>
+              <Input
+                type="number"
+                step="any"
+                className="border-[#282828] bg-[#121212]"
+                {...register("usdtToPhpGicFee", {
+                  onChange: (e) => {
+                    const val = Number(e.target.value)
+                    updateUsdtToPhpFromFees(
+                      usdtToPhpReferenceRate,
+                      usdtToPhpSpinzoFee,
+                      val
+                    )
+                  },
+                })}
+              />
             </div>
 
             <div className="mt-8 flex items-center justify-center text-[#4e4e4e]">
@@ -274,13 +364,17 @@ export default function CreateExchangeRatePage() {
                   Profit / Spread (PHP)
                 </Label>
                 <div className="flex h-10 items-center rounded-md border border-[#282828] bg-[#121212] px-3">
-                  <span className="font-medium text-[#ededed]">{usdtToPhpSpread}</span>
+                  <span className="font-medium text-[#ededed]">
+                    {usdtToPhpSpread}
+                  </span>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
                 <Label className="text-xs text-[#4e4e4e]">Spread (%)</Label>
                 <div className="flex h-10 items-center rounded-md border border-[#282828] bg-[#121212] px-3">
-                  <span className="font-medium text-[#ededed]">{usdtToPhpSpreadPercentage}%</span>
+                  <span className="font-medium text-[#ededed]">
+                    {usdtToPhpSpreadPercentage}%
+                  </span>
                 </div>
               </div>
             </div>
@@ -310,8 +404,12 @@ export default function CreateExchangeRatePage() {
                 {...register("phpToUsdtReferenceRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updatePhpToUsdtFromMarkup(val, phpToUsdtMarkupPercentage)
-                  }
+                    updatePhpToUsdtFromFees(
+                      val,
+                      phpToUsdtSpinzoFee,
+                      phpToUsdtGicFee
+                    )
+                  },
                 })}
               />
               <p className="text-xs text-[#4e4e4e]">
@@ -336,8 +434,12 @@ export default function CreateExchangeRatePage() {
                 {...register("phpToUsdtRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updatePhpToUsdtFromRate(phpToUsdtReferenceRate, val)
-                  }
+                    updatePhpToUsdtFromRate(
+                      phpToUsdtReferenceRate,
+                      val,
+                      phpToUsdtGicFee
+                    )
+                  },
                 })}
               />
               <p className="text-xs text-[#4e4e4e]">
@@ -346,30 +448,47 @@ export default function CreateExchangeRatePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-4">
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-4">
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">Markup %</Label>
+              <Label className="text-sm text-[#ededed]">Spinzo Fee</Label>
               <Input
                 type="number"
                 step="any"
                 className="border-[#282828] bg-[#121212]"
-                {...register("phpToUsdtMarkupPercentage", {
+                {...register("phpToUsdtSpinzoFee", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
-                    updatePhpToUsdtFromMarkup(phpToUsdtReferenceRate, val)
-                  }
+                    updatePhpToUsdtFromFees(
+                      phpToUsdtReferenceRate,
+                      val,
+                      phpToUsdtGicFee
+                    )
+                  },
                 })}
               />
-              <div className="mt-1 flex flex-col gap-1">
-                <p className="text-xs text-[#4e4e4e]">
-                  Set the markup percentage to control your profit margin on
-                  this rate.
-                </p>
-                <p className="text-xs text-[#4e4e4e]">
-                  At {phpToUsdtMarkupPercentage}% markup: final rate is {phpToUsdtRate} (market/reference:
-                  {phpToUsdtReferenceRate}).
-                </p>
-              </div>
+            </div>
+
+            <div className="mt-8 flex items-center justify-center font-medium text-[#4e4e4e]">
+              +
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-[#ededed]">GIC Fee </Label>
+              <Input
+                type="number"
+                step="any"
+                className="border-[#282828] bg-[#121212]"
+                {...register("phpToUsdtGicFee", {
+                  onChange: (e) => {
+                    const val = Number(e.target.value)
+                    updatePhpToUsdtFromFees(
+                      phpToUsdtReferenceRate,
+                      phpToUsdtSpinzoFee,
+                      val
+                    )
+                  },
+                })}
+              />
             </div>
 
             <div className="mt-8 flex items-center justify-center text-[#4e4e4e]">
@@ -384,13 +503,17 @@ export default function CreateExchangeRatePage() {
                   Profit / Spread (USDT)
                 </Label>
                 <div className="flex h-10 items-center rounded-md border border-[#282828] bg-[#121212] px-3">
-                  <span className="font-medium text-[#ededed]">{phpToUsdtSpread}</span>
+                  <span className="font-medium text-[#ededed]">
+                    {phpToUsdtSpread}
+                  </span>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
                 <Label className="text-xs text-[#4e4e4e]">Spread (%)</Label>
                 <div className="flex h-10 items-center rounded-md border border-[#282828] bg-[#121212] px-3">
-                  <span className="font-medium text-[#ededed]">{phpToUsdtSpreadPercentage}%</span>
+                  <span className="font-medium text-[#ededed]">
+                    {phpToUsdtSpreadPercentage}%
+                  </span>
                 </div>
               </div>
             </div>
@@ -402,7 +525,9 @@ export default function CreateExchangeRatePage() {
           <Checkbox
             id="active"
             checked={isActive}
-            onCheckedChange={(checked) => setValue("isActive", checked as boolean)}
+            onCheckedChange={(checked) =>
+              setValue("isActive", checked as boolean)
+            }
             className="border-[#282828] data-[state=checked]:border-[#83b047] data-[state=checked]:bg-[#83b047]"
           />
           <Label

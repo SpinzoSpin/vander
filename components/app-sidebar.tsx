@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSession } from "next-auth/react"
 
 import { NavMain, TNavMainData } from "@/components/nav-main"
 import {
@@ -78,6 +79,34 @@ const data: { user: Record<string, string>; main: TNavMainData[] } = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: session } = useSession()
+  const role = (session?.user as any)?.role?.toLowerCase()
+
+  const filteredMain = React.useMemo(() => {
+    if (role === "gic") {
+      return data.main.map(menu => {
+        if (menu.name === "Operations") {
+          return menu
+        }
+        return null
+      }).filter(Boolean) as TNavMainData[]
+    }
+    
+    if (role === "lotto") {
+      return data.main.map(menu => {
+        if (menu.name === "Operations") {
+          return {
+            ...menu,
+            items: menu.items?.filter(item => item.name === "Fiat to Crypto")
+          }
+        }
+        return null
+      }).filter(Boolean) as TNavMainData[]
+    }
+
+    return data.main
+  }, [role])
+
   return (
     <Sidebar
       collapsible="icon"
@@ -102,7 +131,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.main} />
+        <NavMain items={filteredMain} />
       </SidebarContent>
       <div className="my-4 group-data-[collapsible=icon]:hidden">
         <Line />

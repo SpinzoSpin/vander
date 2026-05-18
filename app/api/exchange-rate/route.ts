@@ -4,7 +4,7 @@ import { getExchangeRates } from "@/services/exchange-rates/get-rates"
 import { auth } from "@/auth/auth"
 import { NextRequest } from "next/server"
 
-export const GET = withErrorHandler(async (req: NextRequest) => {
+export const GET = withErrorHandler(async (req) => {
     const session = await auth()
     if (!session || !session.user) {
         return unauthorized("Requires authentication")
@@ -15,7 +15,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     const filter = searchParams.get("filter") || undefined
     const currency = searchParams.get("currency") || undefined
 
-    const dbRates = await getExchangeRates({ q, filter, currency })
+    const dbRates = await getExchangeRates({ q, filter, currency, role: (session.user as any).role })
     
     // Map to ExchangeRate format expected by the frontend
     const mappedData = dbRates.map(r => ({

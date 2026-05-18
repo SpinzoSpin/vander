@@ -8,14 +8,14 @@ import * as z from "zod"
 export async function deleteExchangeRateAction(id: string) {
   try {
     const rateId = parseInt(id, 10)
-    
+
     await prisma.exchange_rates.delete({
       where: { id: rateId }
     })
 
     logger.info({ id: rateId }, "Exchange rate deleted")
     revalidatePath("/dashboard/exchange-rates")
-    
+
     return { success: true, message: "Exchange rate deleted successfully" }
   } catch (error: any) {
     logger.error({ err: error.message }, "Failed to delete exchange rate")
@@ -31,12 +31,16 @@ const editExchangeRateSchema = z.object({
   usdtToPhpRate: z.coerce.number(),
   usdtToPhpSpread: z.coerce.number(),
   usdtToPhpSpreadPercentage: z.coerce.number(),
-  
+  usdtToPhpSpinzoFee: z.coerce.number(),
+  usdtToPhpGicFee: z.coerce.number(),
+
   phpToUsdtReferenceRate: z.coerce.number(),
   phpToUsdtRate: z.coerce.number(),
   phpToUsdtSpread: z.coerce.number(),
   phpToUsdtSpreadPercentage: z.coerce.number(),
-  
+  phpToUsdtSpinzoFee: z.coerce.number(),
+  phpToUsdtGicFee: z.coerce.number(),
+
   isActive: z.boolean(),
 })
 
@@ -48,10 +52,14 @@ export async function editExchangeRateAction(prevState: any, formData: FormData)
       usdtToPhpRate: formData.get("usdtToPhpRate"),
       usdtToPhpSpread: formData.get("usdtToPhpSpread"),
       usdtToPhpSpreadPercentage: formData.get("usdtToPhpSpreadPercentage"),
+      usdtToPhpSpinzoFee: formData.get("usdtToPhpSpinzoFee"),
+      usdtToPhpGicFee: formData.get("usdtToPhpGicFee"),
       phpToUsdtReferenceRate: formData.get("phpToUsdtReferenceRate"),
       phpToUsdtRate: formData.get("phpToUsdtRate"),
       phpToUsdtSpread: formData.get("phpToUsdtSpread"),
       phpToUsdtSpreadPercentage: formData.get("phpToUsdtSpreadPercentage"),
+      phpToUsdtSpinzoFee: formData.get("phpToUsdtSpinzoFee"),
+      phpToUsdtGicFee: formData.get("phpToUsdtGicFee"),
       isActive: formData.get("isActive") === "on" || formData.get("isActive") === "true",
     }
 
@@ -64,12 +72,17 @@ export async function editExchangeRateAction(prevState: any, formData: FormData)
         usdt_to_php_rate: parsed.usdtToPhpRate,
         usdt_to_php_spread: parsed.usdtToPhpSpread,
         usdt_to_php_spread_percentage: parsed.usdtToPhpSpreadPercentage,
-        
+
+        usdt_to_php_spinzo_fee: parsed.usdtToPhpSpinzoFee,
+        usdt_to_php_gic_fee: parsed.usdtToPhpGicFee,
+
         php_to_usdt_reference_rate: parsed.phpToUsdtReferenceRate,
         php_to_usdt_rate: parsed.phpToUsdtRate,
         php_to_usdt_spread: parsed.phpToUsdtSpread,
         php_to_usdt_spread_percentage: parsed.phpToUsdtSpreadPercentage,
-        
+        php_to_usdt_spinzo_fee: parsed.phpToUsdtSpinzoFee,
+        php_to_usdt_gic_fee: parsed.phpToUsdtGicFee,
+
         is_active: parsed.isActive,
       }
     })
@@ -77,7 +90,7 @@ export async function editExchangeRateAction(prevState: any, formData: FormData)
     logger.info({ result }, "Exchange rate edited: ")
 
     revalidatePath("/dashboard/exchange-rates")
-    
+
     return { success: true, message: "Exchange rate updated successfully" }
   } catch (error: any) {
     if (error instanceof z.ZodError) {

@@ -101,9 +101,9 @@ export class NotFoundError extends ApiError {
  * })
  */
 export function withErrorHandler(
-  handler: (req: Request, ...args: any[]) => Promise<NextResponse> | NextResponse
+  handler: (req: any, ...args: any[]) => Promise<NextResponse> | NextResponse
 ) {
-  return async (req: Request, ...args: any[]) => {
+  return async (req: any, ...args: any[]) => {
     try {
       return await handler(req, ...args)
     } catch (error: any) {

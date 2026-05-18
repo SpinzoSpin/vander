@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "next-auth/react"
+import { signIn, getSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import {
   Card,
@@ -31,14 +31,20 @@ export function SignIn() {
       email,
       password,
       redirect: false,
-      redirectTo: "/dashboard",
     })
 
     if (result?.error) {
       setError("Invalid credentials.")
       setIsLoading(false)
     } else {
-      router.push("/dashboard")
+      const session = await getSession()
+      const role = (session?.user as any)?.role?.toLowerCase()
+      
+      if (role === "gic" || role === "lotto") {
+        router.push("/dashboard/operations/fiat-to-crypto")
+      } else {
+        router.push("/dashboard")
+      }
     }
   }
 

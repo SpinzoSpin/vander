@@ -41,6 +41,7 @@ export const GET = withErrorHandler(async (req) => {
             : "0.00%",
         targetAddress: t.target_address || "-",
         txHash: t.tx_hash || "-",
+        bankDetails: t.bank_details ? (() => { try { return JSON.parse(t.bank_details) } catch { return null } })() : null,
         createdAt: format(new Date(t.created_at), "MMM d, yyyy h:mm a"),
     }))
 

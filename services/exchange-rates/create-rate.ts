@@ -37,6 +37,10 @@ export interface ManualRates {
     phpToUsdtRate: number;
     phpToUsdtSpread: number;
     phpToUsdtSpreadPercentage: number;
+    usdtToPhpSpinzoFee: number;
+    usdtToPhpGicFee: number;
+    phpToUsdtSpinzoFee: number;
+    phpToUsdtGicFee: number;
     isActive: boolean;
 }
 
@@ -60,6 +64,10 @@ export async function createExchangeRate(manualRates?: ManualRates) {
                 php_to_usdt_rate: manualRates.phpToUsdtRate,
                 php_to_usdt_spread: manualRates.phpToUsdtSpread,
                 php_to_usdt_spread_percentage: manualRates.phpToUsdtSpreadPercentage,
+                usdt_to_php_spinzo_fee: manualRates.usdtToPhpSpinzoFee,
+                usdt_to_php_gic_fee: manualRates.usdtToPhpGicFee,
+                php_to_usdt_spinzo_fee: manualRates.phpToUsdtSpinzoFee,
+                php_to_usdt_gic_fee: manualRates.phpToUsdtGicFee,
                 is_active: manualRates.isActive
             }
         })

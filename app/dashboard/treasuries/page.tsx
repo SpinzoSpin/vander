@@ -1,4 +1,7 @@
 import { Suspense } from "react"
+import { auth } from "@/auth/auth"
+import { redirect } from "next/navigation"
+
 import { ActionsContainer } from "@/components/actions-container"
 import {
   TreasuriesTable,
@@ -12,6 +15,12 @@ import { getTreasuries } from "@/services/treasuries/get-treasuries"
 import { format } from "date-fns"
 
 export default async function Page(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const session = await auth()
+  const role = (session?.user as any)?.role?.toLowerCase()
+
+  if (role === "gic" || role === "lotto") {
+    redirect("/dashboard/operations/fiat-to-crypto")
+  }
   const searchParams = await props.searchParams
   const q = typeof searchParams.q === 'string' ? searchParams.q : undefined
   const filter = typeof searchParams.filter === 'string' ? searchParams.filter : undefined

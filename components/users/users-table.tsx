@@ -7,7 +7,7 @@ import { DataTable } from "@/components/data-table"
 export interface User {
   id: string
   email: string
-  roles: string[]
+  role: string
   updatedAt: string
   createdAt: string
 }
@@ -25,13 +25,13 @@ const columns: ColumnDef<User>[] = [
     ),
   },
   {
-    accessorKey: "roles",
-    header: "ROLES",
+    accessorKey: "role",
+    header: "ROLE",
     cell: ({ row }) => {
-      const roles = row.getValue("roles") as string[]
+      const role = row.getValue("role") as string
       return (
-        <span className="text-xs">
-          {roles.join(", ")}
+        <span className="text-xs capitalize">
+          {role}
         </span>
       )
     },

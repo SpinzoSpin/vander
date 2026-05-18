@@ -8,6 +8,7 @@ import { TransactionStatusChip } from "@/components/operations/transaction-statu
 import { Button } from "@/components/ui/button"
 import { UploadInvoiceModal } from "@/components/operations/upload-invoice-modal"
 
+import { BankDetailsModal } from "@/components/operations/bank-details-modal"
 import { DataTable } from "../data-table"
 
 export interface OnrampTransaction {
@@ -28,6 +29,11 @@ export interface OnrampTransaction {
   targetAddress: string
   txHash: string
   createdAt: string
+  bankDetails?: {
+    bankName: string
+    accountName: string
+    accountNumber: string
+  } | null
 }
 
 const columns: ColumnDef<OnrampTransaction>[] = [
@@ -67,6 +73,23 @@ const columns: ColumnDef<OnrampTransaction>[] = [
     cell: ({ row }) => (
       <span className="text-xs">{row.getValue("totalReceived")}</span>
     ),
+  },
+  {
+    id: "bankDetails",
+    header: "BANK DETAILS",
+    cell: ({ row }) => {
+      console.log({ bankDetails: row.original.bankDetails })
+      const bankDetails = row.original.bankDetails
+      if (!bankDetails) return <span className="text-xs text-[#4e4e4e]">-</span>
+
+      return (
+        <BankDetailsModal bankDetails={bankDetails}>
+          <Button variant="outline" size="xs">
+            View Details
+          </Button>
+        </BankDetailsModal>
+      )
+    },
   },
   {
     accessorKey: "profitUsdt",

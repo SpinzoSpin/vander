@@ -11,13 +11,23 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { getExchangeRates } from "@/services/exchange-rates/get-rates"
 
+import { auth } from "@/auth/auth"
+import { redirect } from "next/navigation"
+
 export default async function Page(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const session = await auth()
+  const role = (session?.user as any)?.role?.toLowerCase()
+
+  if (role === "gic" || role === "lotto") {
+    redirect("/dashboard/operations/fiat-to-crypto")
+  }
+
   const searchParams = await props.searchParams
   const q = typeof searchParams.q === 'string' ? searchParams.q : undefined
   const filter = typeof searchParams.filter === 'string' ? searchParams.filter : undefined
   const currency = typeof searchParams.currency === 'string' ? searchParams.currency : undefined
 
-  const dbRates = await getExchangeRates({ q, filter, currency })
+  const dbRates = await getExchangeRates({ q, filter, currency, role: session?.user ? (session.user as any).role : undefined })
 
   const mappedData: ExchangeRate[] = dbRates.map(r => ({
     id: r.id.toString(),

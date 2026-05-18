@@ -1,14 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowUpDownIcon,
   ChevronDown,
   Notification01Icon,
+  Logout01Icon,
 } from "@hugeicons/core-free-icons"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function ExchangeRatePill() {
   const [isUsdtFirst, setIsUsdtFirst] = React.useState(true)
@@ -75,9 +82,27 @@ export function HeaderActions() {
             </>
           )}
         </div>
-        <button className="flex items-center justify-center text-muted-foreground/60 transition-colors hover:text-white">
-          <HugeiconsIcon icon={ChevronDown} size={16} strokeWidth={2.5} />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center justify-center text-muted-foreground/60 transition-colors outline-none hover:text-white">
+              <HugeiconsIcon icon={ChevronDown} size={16} strokeWidth={2.5} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => signOut()}
+              className="flex cursor-pointer items-center focus:bg-red-500/10"
+            >
+              <HugeiconsIcon
+                icon={Logout01Icon}
+                size={16}
+                strokeWidth={2}
+                className="mr-2"
+              />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )

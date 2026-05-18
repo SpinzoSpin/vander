@@ -16,7 +16,7 @@ export const GET = withErrorHandler(async (req) => {
     const currency = searchParams.get("currency") || undefined
 
     const dbRates = await getExchangeRates({ q, filter, currency, role: (session.user as any).role })
-    
+
     // Map to ExchangeRate format expected by the frontend
     const mappedData = dbRates.map(r => ({
         id: r.id.toString(),
@@ -24,8 +24,13 @@ export const GET = withErrorHandler(async (req) => {
         usdtPhpRefRate: r.usdt_to_php_reference_rate.toString(),
         usdtPhpFinalRate: r.usdt_to_php_rate.toString(),
         usdtPhpProfitSpread: r.usdt_to_php_spread?.toString() || "0",
+        phpUsdtProfitSpread: r.php_to_usdt_spread?.toString() || "0",
+        usdtPhpSpinzoFee: r.usdt_to_php_spinzo_fee?.toString() || "0",
+        usdtPhpGicFee: r.usdt_to_php_gic_fee?.toString() || "0",
         phpUsdtRefRate: r.php_to_usdt_reference_rate.toString(),
         phpUsdtRate: r.php_to_usdt_rate.toString(),
+        phpUsdtSpinzoFee: r.php_to_usdt_spinzo_fee?.toString() || "0",
+        phpUsdtGicFee: r.php_to_usdt_gic_fee?.toString() || "0",
         active: r.is_active || false,
     }))
 

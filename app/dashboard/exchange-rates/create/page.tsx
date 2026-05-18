@@ -10,8 +10,9 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useEffect } from "react"
 import { z } from "zod"
-
+import { getLiveReferenceRatesAction } from "../actions"
 const roundToSixDecimals = (value: number) =>
   Math.round(value * 1000000) / 1000000
 const roundToTwoDecimals = (value: number) => Math.round(value * 100) / 100
@@ -38,12 +39,14 @@ type FormData = z.infer<typeof formSchema>
 
 export default function CreateExchangeRatePage() {
   const router = useRouter()
+  // const
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    getValues,
     formState: { isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema) as any,
@@ -66,18 +69,55 @@ export default function CreateExchangeRatePage() {
     },
   })
 
+  // Fetch live reference rates on mount
+  useEffect(() => {
+    const fetchRates = async () => {
+      const res = await getLiveReferenceRatesAction()
+      if (res.success && res.data) {
+        setValue("usdtToPhpReferenceRate", res.data.usdtToPhpReferenceRate, {
+          shouldValidate: true,
+        })
+        setValue("phpToUsdtReferenceRate", res.data.phpToUsdtReferenceRate, {
+          shouldValidate: true,
+        })
+
+        // Also update the dependent fields (rates, spread) based on current fees
+        // This simulates the user typing in the reference rate manually
+        const currentUsdtToPhpSpinzo = getValues("usdtToPhpSpinzoFee") || 0
+        const currentUsdtToPhpGic = getValues("usdtToPhpGicFee") || 0
+        updateUsdtToPhpFromFees(
+          res.data.usdtToPhpReferenceRate,
+          currentUsdtToPhpSpinzo,
+          currentUsdtToPhpGic
+        )
+
+        const currentPhpToUsdtSpinzo = getValues("phpToUsdtSpinzoFee") || 0
+        const currentPhpToUsdtGic = getValues("phpToUsdtGicFee") || 0
+        updatePhpToUsdtFromFees(
+          res.data.phpToUsdtReferenceRate,
+          currentPhpToUsdtSpinzo,
+          currentPhpToUsdtGic
+        )
+      } else {
+        toast.error("Failed to fetch live reference rates")
+      }
+    }
+    fetchRates()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Watch current values to display in UI
   const usdtToPhpReferenceRate = watch("usdtToPhpReferenceRate")
   const usdtToPhpSpinzoFee = watch("usdtToPhpSpinzoFee")
   const usdtToPhpGicFee = watch("usdtToPhpGicFee")
-  const usdtToPhpRate = watch("usdtToPhpRate")
+
   const usdtToPhpSpread = watch("usdtToPhpSpread")
   const usdtToPhpSpreadPercentage = watch("usdtToPhpSpreadPercentage")
 
-  const phpToUsdtReferenceRate = watch("usdtToPhpReferenceRate")
+  const phpToUsdtReferenceRate = watch("phpToUsdtReferenceRate")
   const phpToUsdtSpinzoFee = watch("phpToUsdtSpinzoFee")
   const phpToUsdtGicFee = watch("phpToUsdtGicFee")
-  const phpToUsdtRate = watch("phpToUsdtRate")
+
   const phpToUsdtSpread = watch("phpToUsdtSpread")
   const phpToUsdtSpreadPercentage = watch("phpToUsdtSpreadPercentage")
 
@@ -129,8 +169,16 @@ export default function CreateExchangeRatePage() {
     spinzo: number,
     gic: number
   ) => {
-    const rate = roundToSixDecimals(ref * (1 - (spinzo + gic) / 100))
-    const diff = Math.abs(ref - rate)
+    let rate = 0
+    let diff = 0
+    if (ref > 0) {
+      const usdtToPhpRef = 1 / ref
+      const spinzoRate = spinzo / (usdtToPhpRef * usdtToPhpRef)
+      const gicRate = gic / (usdtToPhpRef * usdtToPhpRef)
+      rate = roundToSixDecimals(ref - spinzoRate - gicRate)
+      diff = Math.abs(ref - rate)
+    }
+
     setValue("phpToUsdtRate", rate, { shouldValidate: true })
     setValue("phpToUsdtSpread", roundToSixDecimals(diff), {
       shouldValidate: true,
@@ -148,17 +196,26 @@ export default function CreateExchangeRatePage() {
     currentGic: number
   ) => {
     const diff = Math.abs(ref - rate)
-    const totalMarkup = ref > 0 ? (diff / ref) * 100 : 0
-    const spinzo = totalMarkup - currentGic
+    let spinzo = 0
+    if (ref > 0) {
+      const usdtToPhpRef = 1 / ref
+      const totalFee = diff * (usdtToPhpRef * usdtToPhpRef)
+      spinzo = totalFee - currentGic
+    }
+
     setValue("phpToUsdtSpinzoFee", roundToTwoDecimals(spinzo), {
       shouldValidate: true,
     })
     setValue("phpToUsdtSpread", roundToSixDecimals(diff), {
       shouldValidate: true,
     })
-    setValue("phpToUsdtSpreadPercentage", roundToTwoDecimals(totalMarkup), {
-      shouldValidate: true,
-    })
+    setValue(
+      "phpToUsdtSpreadPercentage",
+      roundToTwoDecimals(ref > 0 ? (diff / ref) * 100 : 0),
+      {
+        shouldValidate: true,
+      }
+    )
   }
 
   const onSubmit = async (data: FormData) => {

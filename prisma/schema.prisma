@@ -112,7 +112,7 @@ model transactions {
   fail_reason                         String?                  @db.VarChar
   profit                              Decimal?                 @default(0) @db.Decimal
   amount_usdt_original                Decimal?                 @db.Decimal
-  exchange_rate_id                    Int
+  exchange_rate_id                    Int?
   order_id                            String?                  @db.VarChar
   bank_details                        String?                  @db.VarChar
   received_record_id                  Int?
@@ -126,6 +126,7 @@ model transactions {
   rate_snapshot                       Decimal?                 @db.Decimal
   reference_rate_snapshot             Decimal?                 @db.Decimal
   applied_rate_snapshot               Decimal?                 @db.Decimal
+  exchange_rate                       exchange_rates?          @relation(fields: [exchange_rate_id], references: [id], onDelete: SetNull)
 }
 
 model networks {
@@ -144,23 +145,24 @@ model networks {
 }
 
 model exchange_rates {
-  id                            Int      @id @default(autoincrement())
-  pair                          String   @default("USDT/PHP") @db.VarChar
-  usdt_to_php_rate              Decimal  @db.Decimal
-  php_to_usdt_rate              Decimal  @db.Decimal
-  usdt_to_php_spinzo_fee        Decimal? @default(0) @db.Decimal
-  php_to_usdt_spinzo_fee        Decimal? @default(0) @db.Decimal
-  usdt_to_php_gic_fee           Decimal? @default(0) @db.Decimal
-  php_to_usdt_gic_fee           Decimal? @default(0) @db.Decimal
-  is_active                     Boolean? @default(true)
-  updated_at                    DateTime @default(now()) @db.Timestamptz(3)
-  created_at                    DateTime @default(now()) @db.Timestamptz(3)
-  usdt_to_php_reference_rate    Decimal  @db.Decimal
-  usdt_to_php_spread            Decimal? @db.Decimal
-  usdt_to_php_spread_percentage Decimal? @db.Decimal
-  php_to_usdt_reference_rate    Decimal  @db.Decimal
-  php_to_usdt_spread            Decimal? @db.Decimal
-  php_to_usdt_spread_percentage Decimal? @db.Decimal
+  id                            Int            @id @default(autoincrement())
+  pair                          String         @default("USDT/PHP") @db.VarChar
+  usdt_to_php_rate              Decimal        @db.Decimal
+  php_to_usdt_rate              Decimal        @db.Decimal
+  usdt_to_php_spinzo_fee        Decimal?       @default(0) @db.Decimal
+  php_to_usdt_spinzo_fee        Decimal?       @default(0) @db.Decimal
+  usdt_to_php_gic_fee           Decimal?       @default(0) @db.Decimal
+  php_to_usdt_gic_fee           Decimal?       @default(0) @db.Decimal
+  is_active                     Boolean?       @default(true)
+  updated_at                    DateTime       @default(now()) @db.Timestamptz(3)
+  created_at                    DateTime       @default(now()) @db.Timestamptz(3)
+  usdt_to_php_reference_rate    Decimal        @db.Decimal
+  usdt_to_php_spread            Decimal?       @db.Decimal
+  usdt_to_php_spread_percentage Decimal?       @db.Decimal
+  php_to_usdt_reference_rate    Decimal        @db.Decimal
+  php_to_usdt_spread            Decimal?       @db.Decimal
+  php_to_usdt_spread_percentage Decimal?       @db.Decimal
+  transactions                  transactions[]
 }
 
 model media {

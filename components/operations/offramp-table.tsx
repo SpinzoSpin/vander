@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { UploadInvoiceModal } from "@/components/operations/upload-invoice-modal"
 
 import { DataTable } from "../data-table"
+import { UploadTxHashModal } from "./input-txhash-modal"
 
 export interface OfframpTransaction {
   id: string
@@ -85,17 +86,7 @@ const columns: ColumnDef<OfframpTransaction>[] = [
   {
     id: "confirmAsSendingAction",
     header: "CONFIRM AS SENDING",
-    cell: ({ row }) => (
-      <UploadInvoiceModal transactionId={row.original.id}>
-        <Button
-          variant="outline"
-          size="xs"
-          id={`upload-invoice-${row.original.id}`}
-        >
-          Upload Invoice
-        </Button>
-      </UploadInvoiceModal>
-    ),
+    cell: ({ row }) => <UploadTxHashModal />,
   },
 ]
 

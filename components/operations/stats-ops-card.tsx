@@ -16,7 +16,7 @@ export function OperationStatsCard({ stats }: { stats: OperationStats }) {
   return (
     <CardGrid cols={5}>
       <RevenueCard
-        title="TOTAL TRANSACTION"
+        title="TOTAL TRX"
         amount={stats.totalTransactions.toString()}
         percentageChange={stats.transactionsGrowth.value}
         isPositive={stats.transactionsGrowth.isPositive}
@@ -35,20 +35,20 @@ export function OperationStatsCard({ stats }: { stats: OperationStats }) {
         withEndLabel={false}
         withUSDTIcon={false}
       />
-      <RevenueCard 
-        title="TOTAL REVENUE" 
-        amount={stats.totalRevenue} 
+      <RevenueCard
+        title="TOTAL REVENUE"
+        amount={stats.totalRevenue}
         percentageChange={stats.revenueGrowth.value}
         isPositive={stats.revenueGrowth.isPositive}
         withEndLabel={true}
       />
-      <RevenueCard 
-        title="TOTAL MARGIN" 
-        amount={stats.totalMargin} 
+      <RevenueCard
+        title="TOTAL MARGIN"
+        amount={stats.totalMargin}
         percentageChange={stats.marginGrowth.value}
         isPositive={stats.marginGrowth.isPositive}
         withEndLabel={true}
-        withUSDTIcon={false} 
+        withUSDTIcon={false}
       />
     </CardGrid>
   )

@@ -5,7 +5,7 @@ import { ApiError } from "@/lib/api-response"
 const API_URL = process.env.EXCHANGE_RATE_API_URL || 'https://v6.exchangerate-api.com/v6'
 const API_KEY = process.env.EXCHANGE_RATE_API_KEY
 
-async function getPhpToUsdRate(): Promise<number> {
+export async function getPhpToUsdRate(): Promise<number> {
     if (!API_KEY) {
         throw new ApiError('EXCHANGE_RATE_API_KEY is not configured in environment variables', 500)
     }
@@ -78,22 +78,24 @@ export async function createExchangeRate(manualRates?: ManualRates) {
     const phpToUsdtReferenceRate = await getPhpToUsdRate()
     const usdtToPhpReferenceRate = roundToSixDecimals(1 / phpToUsdtReferenceRate)
 
-    // 2. Load markup rates from constants (e.g. 0.2 means 0.2%)
-    const gicMarkupPct = Number(GIC_MARKUP_RATE || 0)
-    const spinzoMarkupPct = Number(SPINZO_MARKUP_RATE || 0)
+    // 2. Load markup rates from constants (representing fixed PHP fee per USDT)
+    const gicFee = Number(GIC_MARKUP_RATE || 0)
+    const spinzoFee = Number(SPINZO_MARKUP_RATE || 0)
 
-    // 3. Compute Fiat to Crypto (PHP -> USDT) - Uses GIC markup
-    // Buying USDT: user gets LESS USDT per PHP than market (platform keeps margin)
-    const phpToUsdtRate = roundToSixDecimals(phpToUsdtReferenceRate * (1 - (gicMarkupPct / 100)))
+    // 3. Compute Fiat to Crypto (PHP -> USDT)
+    // Buying USDT: user gets LESS USDT per PHP than market. Fee is in PHP.
+    const phpToUsdtSpinzoRate = spinzoFee / (usdtToPhpReferenceRate * usdtToPhpReferenceRate)
+    const phpToUsdtGicRate = gicFee / (usdtToPhpReferenceRate * usdtToPhpReferenceRate)
+    const phpToUsdtRate = roundToSixDecimals(phpToUsdtReferenceRate - phpToUsdtSpinzoRate - phpToUsdtGicRate)
     const phpToUsdtDiff = Math.abs(phpToUsdtReferenceRate - phpToUsdtRate)
     const phpToUsdtSpread = roundToSixDecimals(phpToUsdtDiff)
     const phpToUsdtSpreadPercentage = roundToTwoDecimals(
         phpToUsdtReferenceRate > 0 ? (phpToUsdtDiff / phpToUsdtReferenceRate) * 100 : 0
     )
 
-    // 4. Compute Crypto to Fiat (USDT -> PHP) - Uses SPINZO markup
-    // Selling USDT: user gets LESS PHP than market (discount for platform)
-    const usdtToPhpRate = roundToSixDecimals(usdtToPhpReferenceRate * (1 - (spinzoMarkupPct / 100)))
+    // 4. Compute Crypto to Fiat (USDT -> PHP)
+    // Selling USDT: user gets LESS PHP than market. Fee is in PHP.
+    const usdtToPhpRate = roundToSixDecimals(usdtToPhpReferenceRate - spinzoFee - gicFee)
     const usdtToPhpDiff = Math.abs(usdtToPhpReferenceRate - usdtToPhpRate)
     const usdtToPhpSpread = roundToSixDecimals(usdtToPhpDiff)
     const usdtToPhpSpreadPercentage = roundToTwoDecimals(

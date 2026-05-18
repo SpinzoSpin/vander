@@ -100,3 +100,22 @@ export async function editExchangeRateAction(prevState: any, formData: FormData)
     return { success: false, message: "Failed to update exchange rate" }
   }
 }
+
+export async function getLiveReferenceRatesAction() {
+  try {
+    const { getPhpToUsdRate } = await import("@/services/exchange-rates/create-rate")
+    const phpToUsdtReferenceRate = await getPhpToUsdRate()
+    const usdtToPhpReferenceRate = Math.round((1 / phpToUsdtReferenceRate) * 1000000) / 1000000
+
+    return {
+      success: true,
+      data: {
+        phpToUsdtReferenceRate,
+        usdtToPhpReferenceRate
+      }
+    }
+  } catch (error: any) {
+    logger.error({ err: error.message }, "Failed to get live reference rates")
+    return { success: false, message: "Failed to fetch live reference rates" }
+  }
+}

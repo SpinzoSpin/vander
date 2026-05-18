@@ -3,6 +3,9 @@
 import { type ColumnDef } from "@tanstack/react-table"
 
 import { DataTable } from "@/components/data-table"
+import { Badge } from "@/components/ui/badge"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Shield01Icon, UserIcon } from "@hugeicons/core-free-icons"
 
 export interface User {
   id: string
@@ -29,10 +32,12 @@ const columns: ColumnDef<User>[] = [
     header: "ROLE",
     cell: ({ row }) => {
       const role = row.getValue("role") as string
+      const isAdmin = role.toLowerCase() === "admin"
       return (
-        <span className="text-xs capitalize">
+        <Badge variant={isAdmin ? "default" : "secondary"} className="flex w-fit items-center gap-1.5 capitalize">
+          <HugeiconsIcon icon={isAdmin ? Shield01Icon : UserIcon} size={14} />
           {role}
-        </span>
+        </Badge>
       )
     },
   },

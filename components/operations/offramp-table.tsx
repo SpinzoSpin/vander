@@ -162,7 +162,7 @@ const baseColumns: ColumnDef<OfframpTransaction>[] = [
   },
   {
     accessorKey: "markupExchangeRate",
-    header: "MARKUP EXCHANGE RATE (ADMIN & GIC)",
+    header: "MARKUP EXCHANGE RATE",
     cell: ({ row }) => (
       <span className="text-xs">{row.getValue("markupExchangeRate")}</span>
     ),
@@ -176,7 +176,7 @@ const baseColumns: ColumnDef<OfframpTransaction>[] = [
   },
   {
     accessorKey: "exchangeRate",
-    header: "EXCHANGE RATE",
+    header: "RERENCE RATE",
     cell: ({ row }) => (
       <span className="text-xs">{row.getValue("exchangeRate")}</span>
     ),

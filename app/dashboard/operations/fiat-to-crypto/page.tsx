@@ -38,9 +38,23 @@ export default async function Page(props: {
 
   const safeRole = role || "admin"
 
-  const mappedData: OnrampTransaction[] = dbTransactions.map(
-    (t) => mapTransaction(t, safeRole) as OnrampTransaction
-  )
+  const mappedData: OnrampTransaction[] = dbTransactions.map((t) => {
+    const base = mapTransaction(t, safeRole) as OnrampTransaction
+    const appliedRate = Number(
+      t.applied_rate_snapshot ||
+      t.rate_snapshot ||
+      t.exchange_rate?.php_to_usdt_rate ||
+      0
+    )
+    const markupExchangeRate = appliedRate
+      ? `1 PHP = ${appliedRate} USDT`
+      : "-"
+
+    return {
+      ...base,
+      markupExchangeRate,
+    }
+  })
 
   const txData = dbTransactions.map((t, index) => ({
     ...t,

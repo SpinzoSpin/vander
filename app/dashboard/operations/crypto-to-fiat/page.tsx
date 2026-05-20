@@ -1,16 +1,15 @@
-import { Suspense } from "react"
-import { format, subDays, isAfter } from "date-fns"
 import { auth } from "@/auth/auth"
-import { redirect } from "next/navigation"
+import { isAfter, subDays } from "date-fns"
+import { Suspense } from "react"
 
-import { OperationStatsCard } from "@/components/operations/stats-ops-card"
+import { ActionsContainer } from "@/components/actions-container"
 import {
-  OfframpTable,
-  type OfframpTransaction,
+    OfframpTable,
+    type OfframpTransaction,
 } from "@/components/operations/offramp-table"
+import { OperationStatsCard } from "@/components/operations/stats-ops-card"
 import { getTransactions } from "@/services/transactions/get-transactions"
 import { mapTransaction } from "@/services/transactions/map-transaction"
-import { ActionsContainer } from "@/components/actions-container"
 
 export default async function Page(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>

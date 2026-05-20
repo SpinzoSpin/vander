@@ -1,4 +1,4 @@
-import { format } from "date-fns"
+import { format } from "date-fns";
 
 export function mapTransaction(t: any, role: string) {
     const isFiatToCrypto = t.type === "fiat_to_crypto";
@@ -14,7 +14,7 @@ export function mapTransaction(t: any, role: string) {
             const gicFee = Number(t.exchange_rate.php_to_usdt_gic_fee || 0);
             const spinzoFee = Number(t.exchange_rate.php_to_usdt_spinzo_fee || 0);
             spreadPercentage = Number(t.exchange_rate.php_to_usdt_spread_percentage || 0);
-            
+
             const totalSpread = gicFee + spinzoFee;
             if (totalSpread > 0) {
                 const totalProfitUsdt = Number(t.profit || 0);

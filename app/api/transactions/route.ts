@@ -1,7 +1,7 @@
-import { withErrorHandler, successResponse, unauthorized } from "@/lib/api-response"
-import { getTransactions } from "@/services/transactions/get-transactions"
 import { auth } from "@/auth/auth"
 import { enum_transactions_type } from "@/generated/prisma"
+import { successResponse, unauthorized, withErrorHandler } from "@/lib/api-response"
+import { getTransactions } from "@/services/transactions/get-transactions"
 import { mapTransaction } from "@/services/transactions/map-transaction"
 
 export const GET = withErrorHandler(async (req) => {

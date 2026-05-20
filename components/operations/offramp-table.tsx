@@ -176,7 +176,7 @@ const baseColumns: ColumnDef<OfframpTransaction>[] = [
   },
   {
     accessorKey: "exchangeRate",
-    header: "RERENCE RATE",
+    header: "REFERENCE RATE",
     cell: ({ row }) => (
       <span className="text-xs">{row.getValue("exchangeRate")}</span>
     ),

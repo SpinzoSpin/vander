@@ -25,6 +25,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { getExplorerName, getExplorerTxUrl } from "@/lib/explorer"
+import { useSession } from "next-auth/react"
 import { DataTable } from "../data-table"
 import { UploadTxHashModal } from "./input-txhash-modal"
 
@@ -54,6 +55,8 @@ export interface OfframpTransaction {
   lastUpdated: string
   lastUpdatedBy: string
   exchangeRate: string
+  markupExchangeRate?: string
+  amountSentToExchange?: string
   invoiceUrl?: string | null
 }
 
@@ -155,6 +158,20 @@ const baseColumns: ColumnDef<OfframpTransaction>[] = [
     header: "LOTTO RECEIVED",
     cell: ({ row }) => (
       <span className="text-xs">{row.getValue("totalReceived")}</span>
+    ),
+  },
+  {
+    accessorKey: "markupExchangeRate",
+    header: "MARKUP EXCHANGE RATE (ADMIN & GIC)",
+    cell: ({ row }) => (
+      <span className="text-xs">{row.getValue("markupExchangeRate")}</span>
+    ),
+  },
+  {
+    accessorKey: "amountSentToExchange",
+    header: "AMOUNT SENT TO EXCHANGE",
+    cell: ({ row }) => (
+      <span className="text-xs">{row.getValue("amountSentToExchange")}</span>
     ),
   },
   {
@@ -301,7 +318,9 @@ function getColumns(role?: string): ColumnDef<OfframpTransaction>[] {
 
 /* ── Dropdown action cell ── */
 function OfframpActionCell({ row }: { row: any }) {
-  const role = (row as any).table?.options?.meta?.role || "admin";
+  const session = useSession()
+
+  const role = session.data?.user ? (session.data.user as any).role : null
   const [loading, setLoading] = React.useState<string | null>(null)
   const [txHashOpen, setTxHashOpen] = React.useState(false)
   const [uploadOpen, setUploadOpen] = React.useState(false)
@@ -331,39 +350,15 @@ function OfframpActionCell({ row }: { row: any }) {
     }
   }
 
+  console.log("DATA SESSION", session)
+  console.log("ROLE: ", role)
+
   if (role === "gic") {
     return null; // GIC is strictly read-only
   }
 
   if (status === "complete") {
     return <span className="text-xs text-[#83b047]">✓ Done</span>
-  }
-
-  // Lotto: only upload tx hash action, no dropdown needed
-  if (role === "lotto") {
-    const isTxSubmitted = !!(row.original.txHash && row.original.txHash !== "-")
-    if (isTxSubmitted) {
-      return <span className="text-xs text-[#4e4e4e]">Tx Hash Submitted</span>
-    }
-    return (
-      <>
-        <Button
-          variant="outline"
-          size="xs"
-          onClick={() => setTxHashOpen(true)}
-          disabled={loading !== null}
-        >
-          <HugeiconsIcon icon={FilesIcon} className="mr-1.5 h-3 w-3" />
-          Upload Tx Hash
-        </Button>
-        <UploadTxHashModal
-          orderId={row.original.orderId}
-          open={txHashOpen}
-          onOpenChange={setTxHashOpen}
-          transactionId={transactionId}
-        />
-      </>
-    )
   }
 
   const canConfirmArrival =
@@ -397,14 +392,32 @@ function OfframpActionCell({ row }: { row: any }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-[200px]">
-          <DropdownMenuItem
-            className="disabled:cursor-not-allowed"
-            onClick={() => setUploadOpen(true)}
-            disabled={isInvoiceUploaded}
-          >
-            <HugeiconsIcon icon={FilesIcon} className="mr-2 h-4 w-4" />
-            Upload Invoice
-          </DropdownMenuItem>
+          {role === "admin" ? (
+            <DropdownMenuItem
+              className="disabled:cursor-not-allowed"
+              onClick={() => setUploadOpen(true)}
+              disabled={isInvoiceUploaded}
+            >
+              <HugeiconsIcon icon={FilesIcon} className="mr-2 h-4 w-4" />
+              Upload Invoice
+            </DropdownMenuItem>
+          ) : <>
+            <DropdownMenuItem
+              className="disabled:cursor-not-allowed"
+              onClick={() => setTxHashOpen(true)}
+              disabled={loading !== null || !!(row.original.txHash && row.original.txHash !== "-")}
+            >
+              <HugeiconsIcon icon={FilesIcon} className="mr-1.5 h-3 w-3" />
+              Upload Tx Hash
+            </DropdownMenuItem>
+            <UploadTxHashModal
+
+              orderId={row.original.orderId}
+              open={txHashOpen}
+              onOpenChange={setTxHashOpen}
+              transactionId={transactionId}
+            />
+          </>}
           {canConfirmArrival && (
             <DropdownMenuItem onClick={() => updateStatus("crypto_arrival")}>
               <HugeiconsIcon icon={PackageReceiveIcon} className="mr-2 h-4 w-4" />

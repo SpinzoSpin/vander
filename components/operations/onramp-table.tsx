@@ -61,6 +61,7 @@ export interface OnrampTransaction {
     accountNumber: string
   } | null
   exchangeRate: string
+  markupExchangeRate?: string
 }
 
 /* ── Lightbox for image preview ── */
@@ -161,6 +162,13 @@ const baseColumns: ColumnDef<OnrampTransaction>[] = [
     header: "LOTTO RECEIVED",
     cell: ({ row }) => (
       <span className="text-xs">{row.getValue("totalReceived")}</span>
+    ),
+  },
+  {
+    accessorKey: "markupExchangeRate",
+    header: "MARKUP EXCHANGE RATE (ADMIN & GIC)",
+    cell: ({ row }) => (
+      <span className="text-xs">{row.getValue("markupExchangeRate")}</span>
     ),
   },
   {

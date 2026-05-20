@@ -38,24 +38,28 @@ export function mapTransaction(t: any, role: string) {
     let displayRate = "-";
     if (t.exchange_rate) {
         if (isFiatToCrypto) {
+            const refRate = Number(t.reference_rate_snapshot || t.exchange_rate.php_to_usdt_reference_rate || 0);
             if (role === "gic") {
-                const ref = Number(t.exchange_rate.php_to_usdt_reference_rate || 0);
                 const spinzoFee = Number(t.exchange_rate.php_to_usdt_spinzo_fee || 0);
-                const usdtToPhpRef = Number(t.exchange_rate.usdt_to_php_reference_rate || (ref > 0 ? 1 / ref : 1));
+                const usdtToPhpRef = Number(
+                    t.usdt_to_php_reference_rate_snapshot ||
+                    t.exchange_rate.usdt_to_php_reference_rate ||
+                    (refRate > 0 ? 1 / refRate : 1)
+                );
                 const spinzoRate = spinzoFee / (usdtToPhpRef * usdtToPhpRef);
-                const defaultRate = ref - spinzoRate;
+                const defaultRate = refRate - spinzoRate;
                 displayRate = `1 PHP = ${defaultRate.toFixed(6)} USDT`;
             } else {
-                displayRate = `1 PHP = ${Number(t.exchange_rate.php_to_usdt_reference_rate || 0).toFixed(6)} USDT`;
+                displayRate = `1 PHP = ${refRate.toFixed(6)} USDT`;
             }
         } else {
+            const refRate = Number(t.reference_rate_snapshot || t.exchange_rate.usdt_to_php_reference_rate || 0);
             if (role === "gic") {
-                const ref = Number(t.exchange_rate.usdt_to_php_reference_rate || 0);
                 const spinzoFee = Number(t.exchange_rate.usdt_to_php_spinzo_fee || 0);
-                const defaultRate = ref - spinzoFee;
+                const defaultRate = refRate - spinzoFee;
                 displayRate = `1 USDT = ${defaultRate.toFixed(2)} PHP`;
             } else {
-                displayRate = `1 USDT = ${Number(t.exchange_rate.usdt_to_php_reference_rate || 0).toFixed(2)} PHP`;
+                displayRate = `1 USDT = ${refRate.toFixed(2)} PHP`;
             }
         }
     }

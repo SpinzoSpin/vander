@@ -1,32 +1,32 @@
 "use client"
 
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { type ColumnDef } from "@tanstack/react-table"
+import { useSearchParams } from "next/navigation"
 import * as React from "react"
 import { createPortal } from "react-dom"
-import { type ColumnDef } from "@tanstack/react-table"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
 import { TransactionStatusChip } from "@/components/operations/transaction-status-chip"
-import { Button } from "@/components/ui/button"
 import { UploadInvoiceModal } from "@/components/operations/upload-invoice-modal"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  MoreHorizontalCircle01Icon,
-  FilesIcon,
-  PackageReceiveIcon,
   CheckmarkCircle02Icon,
+  FilesIcon,
+  MoreHorizontalCircle01Icon,
+  PackageReceiveIcon,
 } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 
+import { getExplorerName, getExplorerTxUrl } from "@/lib/explorer"
 import { DataTable } from "../data-table"
 import { UploadTxHashModal } from "./input-txhash-modal"
-import { getExplorerTxUrl, getExplorerName } from "@/lib/explorer"
 
 export interface OfframpTransaction {
   id: string
@@ -427,6 +427,7 @@ function OfframpActionCell({ row }: { row: any }) {
 
       <UploadInvoiceModal
         transactionId={row.original.id}
+        orderId={row.original.orderId}
         open={uploadOpen}
         onOpenChange={setUploadOpen}
       >

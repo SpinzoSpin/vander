@@ -1,33 +1,33 @@
 "use client"
 
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { type ColumnDef } from "@tanstack/react-table"
+import { useSearchParams } from "next/navigation"
 import * as React from "react"
 import { createPortal } from "react-dom"
-import { type ColumnDef } from "@tanstack/react-table"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
 import { TransactionStatusChip } from "@/components/operations/transaction-status-chip"
-import { Button } from "@/components/ui/button"
 import { UploadInvoiceModal } from "@/components/operations/upload-invoice-modal"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  MoreHorizontalCircle01Icon,
-  CloudUploadIcon,
-  PackageReceiveIcon,
   CheckmarkCircle02Icon,
+  CloudUploadIcon,
+  MoreHorizontalCircle01Icon,
+  PackageReceiveIcon,
 } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 
 import { BankDetailsModal } from "@/components/operations/bank-details-modal"
+import { getExplorerName, getExplorerTxUrl } from "@/lib/explorer"
 import { DataTable } from "../data-table"
 import { UploadTxHashModal } from "./input-txhash-modal"
-import { getExplorerTxUrl, getExplorerName } from "@/lib/explorer"
 
 export interface OnrampTransaction {
   id: string
@@ -336,7 +336,7 @@ function OnrampActionCell({ row }: { row: any }) {
   // Actually, wait, React Table cell can access `table.options.meta?.role`.
   // Let's use `row.original` status and let `OnrampTable` handle passing role via meta or we can just access it.
   const role = (row as any).table?.options?.meta?.role || "admin";
-  
+
   const [loading, setLoading] = React.useState<string | null>(null)
   const [uploadOpen, setUploadOpen] = React.useState(false)
   const [txHashOpen, setTxHashOpen] = React.useState(false)
@@ -393,6 +393,7 @@ function OnrampActionCell({ row }: { row: any }) {
         </Button>
         <UploadInvoiceModal
           transactionId={row.original.id}
+          orderId={row.original.orderId}
           open={uploadOpen}
           onOpenChange={setUploadOpen}
         >

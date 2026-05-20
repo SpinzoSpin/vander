@@ -185,7 +185,7 @@ const baseColumns: ColumnDef<OfframpTransaction>[] = [
         ? row.getValue("markupExchangeRate")
         : row.getValue("exchangeRate")
       console.log("EXCHANGE RATE CELL", { rate: value })
-      return <span className="text-xs">{value}</span>
+      return <span className="text-xs">{value as string}</span>
     },
   },
   {

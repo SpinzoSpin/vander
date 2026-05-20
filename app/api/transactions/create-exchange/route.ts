@@ -1,3 +1,4 @@
+import { auth } from "@/auth/auth"
 import { successResponse, unauthorized, withErrorHandler } from "@/lib/api-response"
 import { authenticateApiRequest } from "@/lib/auth-api-key"
 import { createExchangeTransaction } from "@/services/transactions/create-exchange"
@@ -20,8 +21,11 @@ const createExchangeSchema = z.object({
 
 export const POST = withErrorHandler(async (req) => {
     const authResult = await authenticateApiRequest(req)
+    if (!authResult.authorized) return unauthorized("Requires authentication")
 
-    if (!authResult.authorized) {
+    // 1. Authentication Check
+    const session = await auth()
+    if (!session || !session.user || !authResult.authorized) {
         return unauthorized("You must be logged in to create a transaction")
     }
 

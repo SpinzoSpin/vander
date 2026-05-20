@@ -166,7 +166,7 @@ const baseColumns: ColumnDef<OnrampTransaction>[] = [
   },
   {
     accessorKey: "markupExchangeRate",
-    header: "MARKUP EXCHANGE RATE (ADMIN & GIC)",
+    header: "MARKUP EXCHANGE RATE",
     cell: ({ row }) => (
       <span className="text-xs">{row.getValue("markupExchangeRate")}</span>
     ),

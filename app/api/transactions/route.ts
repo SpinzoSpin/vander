@@ -85,6 +85,7 @@ export const GET = withErrorHandler(async (req) => {
             transactionProfitSpread: `${spreadPercentage.toFixed(2)}%`,
             targetAddress: t.target_address || "-",
             treasuryAddress: t.treasury?.wallet_address || "-",
+            networkSymbol: t.treasury?.network?.symbol?.toLowerCase() || "",
             txHash: t.tx_hash || "-",
             bankDetails: t.bank_details ? (() => { try { return JSON.parse(t.bank_details) } catch { return null } })() : null,
             invoiceUrl: (t as any).invoiceMedia?.url || null,

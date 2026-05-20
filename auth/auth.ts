@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials"
 import type { Provider } from "next-auth/providers"
 import { getUser } from "@/services/users/get-user"
 import { signInSchema } from "@/lib/validations/zod"
+import { authConfig } from "./auth.config"
 
 const providers: Provider[] = [
     Credentials({
@@ -41,6 +42,7 @@ export const providerMap = providers
     .filter((provider) => provider.id !== "credentials")
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+    ...authConfig,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     adapter: PrismaAdapter(prisma as any),
     providers: providers,
@@ -48,20 +50,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         strategy: "jwt",
     },
     debug: true,
-    pages: {
-        signIn: '/signin',
-    },
-    callbacks: {
-        jwt({ token, user }) {
-            // console.log({ authUser: user, token })
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if (user) token.role = (user as any).role
-            return token
-        },
-        session({ session, token }) {
-            (session.user as any).role = token.role
-            // console.log({ session, token })
-            return session
-        },
-    }
 })

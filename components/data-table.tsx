@@ -341,6 +341,14 @@ interface DataTableProps<TData> {
   className?: string
   /** Pinned columns configuration */
   pinnedColumns?: { left?: string[]; right?: string[] }
+  /** Hide pagination controls entirely */
+  hidePagination?: boolean
+  /** Hide column visibility toggle */
+  hideColumnToggle?: boolean
+  /** Disable row selection */
+  disableRowSelection?: boolean
+  /** Optional metadata passed to the table instance */
+  meta?: any
 }
 
 export function DataTable<TData>({
@@ -350,6 +358,10 @@ export function DataTable<TData>({
   pageSize = 10,
   className,
   pinnedColumns = { right: ["actions"] },
+  hidePagination = false,
+  hideColumnToggle = false,
+  disableRowSelection = false,
+  meta,
 }: DataTableProps<TData>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -376,7 +388,7 @@ export function DataTable<TData>({
     initialState: {
       columnPinning: pinnedColumns,
     },
-    enableRowSelection: true,
+    enableRowSelection: !disableRowSelection,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -388,12 +400,13 @@ export function DataTable<TData>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    meta,
   })
 
   return (
     <div className={className}>
       {/* ── Column visibility toggle ── */}
-      <div className="flex items-center justify-end pb-2">
+      {!hideColumnToggle && <div className="flex items-center justify-end pb-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
@@ -430,7 +443,7 @@ export function DataTable<TData>({
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </div>}
 
       {/* ── Table ── */}
       <div className="overflow-hidden rounded-lg border border-[#282828]">
@@ -548,7 +561,7 @@ export function DataTable<TData>({
       </div>
 
       {/* ── Pagination ── */}
-      <div className="flex items-center justify-between pt-3">
+      {!hidePagination && <div className="flex items-center justify-between pt-3">
         <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
@@ -624,7 +637,7 @@ export function DataTable<TData>({
             </Button>
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   )
 }

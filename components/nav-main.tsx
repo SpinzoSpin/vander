@@ -24,6 +24,7 @@ export type TNavMainData = {
   items?: {
     name: string
     url: string
+    badge?: number
   }[]
 }
 
@@ -183,6 +184,11 @@ function NavMainItem({ item }: { item: TNavMainData }) {
                         >
                           {subItem.name}
                         </span>
+                        {subItem.badge !== undefined && subItem.badge > 0 && (
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-transparent px-1.5 text-xs font-bold">
+                            {subItem.badge}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>

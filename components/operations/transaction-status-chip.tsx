@@ -17,11 +17,12 @@ type TransactionStatus =
   | "complete"
   | "fiat_arrival"
   | "crypto_arrival"
+  | "user_processing"
 
 interface StatusConfig {
   label: string
-  color: string      // text + border tint
-  bgColor: string    // chip background
+  color: string // text + border tint
+  bgColor: string // chip background
   icon: typeof CheckmarkCircle01Icon
 }
 
@@ -43,6 +44,12 @@ const STATUS_MAP: Record<TransactionStatus, StatusConfig> = {
     color: "text-[#c49bff]",
     bgColor: "bg-[#c49bff]/10 border-[#c49bff]/20",
     icon: Loading03Icon,
+  },
+  user_processing: {
+    label: "Processing",
+    color: "text-[#c49bff]",
+    bgColor: "bg-[#c49bff]/10 border-[#c49bff]/20",
+    icon: Clock04Icon,
   },
   complete: {
     label: "Complete",
@@ -75,10 +82,24 @@ const FALLBACK_CONFIG: StatusConfig = {
 interface TransactionStatusChipProps {
   status: string
   className?: string
+  role?: string
 }
 
-export function TransactionStatusChip({ status, className }: TransactionStatusChipProps) {
-  const config = STATUS_MAP[status as TransactionStatus] || FALLBACK_CONFIG
+export function TransactionStatusChip({
+  status,
+  className,
+  role,
+}: TransactionStatusChipProps) {
+  let effectiveStatus = status
+  if (
+    (role === "lotto" || role === "gic") &&
+    (status === "fiat_arrival" || status === "crypto_arrival")
+  ) {
+    effectiveStatus = "user_processing"
+  }
+
+  // Use type assertion since user_processing is dynamically added for users
+  const config = (STATUS_MAP as any)[effectiveStatus] || FALLBACK_CONFIG
 
   return (
     <span
@@ -92,7 +113,10 @@ export function TransactionStatusChip({ status, className }: TransactionStatusCh
       <HugeiconsIcon
         icon={config.icon}
         strokeWidth={2}
-        className={cn("size-3.5", status === "processing" && "animate-spin")}
+        className={cn(
+          "size-3.5",
+          effectiveStatus === "processing" && "animate-spin"
+        )}
       />
       {config.label}
     </span>

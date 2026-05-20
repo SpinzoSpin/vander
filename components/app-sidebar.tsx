@@ -12,8 +12,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSkeleton,
 } from "@/components/ui/sidebar"
 import Image from "next/image"
+import { getPendingCounts } from "@/services/transactions/get-pending-counts"
 import { TogglerNavbar } from "./toggler-navbar"
 import { Line } from "./ui/line"
 import SourceIcon from "./icons/SourceIcon"
@@ -79,33 +81,42 @@ const data: { user: Record<string, string>; main: TNavMainData[] } = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const role = (session?.user as any)?.role?.toLowerCase()
+  const [pendingCounts, setPendingCounts] = React.useState({ fiatToCrypto: 0, cryptoToFiat: 0 })
+
+  React.useEffect(() => {
+    if (status === "authenticated") {
+      getPendingCounts().then(setPendingCounts)
+    }
+  }, [status])
 
   const filteredMain = React.useMemo(() => {
-    if (role === "gic") {
-      return data.main.map(menu => {
+    const mainWithBadges = data.main.map(menu => {
+      if (menu.name === "Operations") {
+        return {
+          ...menu,
+          items: menu.items?.map(sub => ({
+            ...sub,
+            badge: sub.name === "Fiat to Crypto" ? pendingCounts.fiatToCrypto :
+                   sub.name === "Crypto to Fiat" ? pendingCounts.cryptoToFiat : undefined
+          }))
+        }
+      }
+      return menu
+    })
+
+    if (role === "gic" || role === "lotto") {
+      return mainWithBadges.map(menu => {
         if (menu.name === "Operations") {
           return menu
         }
         return null
       }).filter(Boolean) as TNavMainData[]
     }
-    
-    if (role === "lotto") {
-      return data.main.map(menu => {
-        if (menu.name === "Operations") {
-          return {
-            ...menu,
-            items: menu.items?.filter(item => item.name === "Fiat to Crypto")
-          }
-        }
-        return null
-      }).filter(Boolean) as TNavMainData[]
-    }
 
-    return data.main
-  }, [role])
+    return mainWithBadges
+  }, [role, pendingCounts])
 
   return (
     <Sidebar
@@ -131,7 +142,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={filteredMain} />
+        {status === "loading" ? (
+          <div className="flex flex-col gap-2 p-4 mt-6">
+            <SidebarMenuSkeleton showIcon />
+            <SidebarMenuSkeleton showIcon />
+            <SidebarMenuSkeleton showIcon />
+            <SidebarMenuSkeleton showIcon />
+          </div>
+        ) : (
+          <NavMain items={filteredMain} />
+        )}
       </SidebarContent>
       <div className="my-4 group-data-[collapsible=icon]:hidden">
         <Line />

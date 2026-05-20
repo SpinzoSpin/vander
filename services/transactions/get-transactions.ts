@@ -44,7 +44,8 @@ export async function getTransactions(params?: {
   const treasuries = await prisma.treasury.findMany({
     where: {
       id: { in: treasuryIds }
-    }
+    },
+    include: { network: true },
   })
   const treasuryMap = new Map(treasuries.map(t => [t.id, t]))
 

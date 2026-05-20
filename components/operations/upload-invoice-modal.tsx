@@ -31,6 +31,7 @@ interface UploadedFile {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ACCEPTED_TYPES = [
+  "image/webp",
   "image/jpeg",
   "image/png",
   "application/pdf",
@@ -67,7 +68,9 @@ export function UploadInvoiceModal({
   const [internalOpen, setInternalOpen] = useState(false)
   const isControlled = controlledOpen !== undefined
   const open = isControlled ? controlledOpen : internalOpen
-  const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen
+  const setOpen = isControlled
+    ? (controlledOnOpenChange ?? (() => {}))
+    : setInternalOpen
 
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
@@ -169,7 +172,9 @@ export function UploadInvoiceModal({
     for (let i = 0; i < files.length; i++) {
       // Mark file as uploading
       setFiles((prev) =>
-        prev.map((f, idx) => (idx === i ? { ...f, status: "uploading" as const } : f))
+        prev.map((f, idx) =>
+          idx === i ? { ...f, status: "uploading" as const } : f
+        )
       )
 
       try {
@@ -190,13 +195,17 @@ export function UploadInvoiceModal({
 
         // Mark file as done
         setFiles((prev) =>
-          prev.map((f, idx) => (idx === i ? { ...f, status: "done" as const } : f))
+          prev.map((f, idx) =>
+            idx === i ? { ...f, status: "done" as const } : f
+          )
         )
       } catch (err: any) {
         allSuccess = false
         // Mark file as error
         setFiles((prev) =>
-          prev.map((f, idx) => (idx === i ? { ...f, status: "error" as const } : f))
+          prev.map((f, idx) =>
+            idx === i ? { ...f, status: "error" as const } : f
+          )
         )
         toast.error(`Failed to upload "${files[i].file.name}": ${err.message}`)
       }
@@ -223,10 +232,7 @@ export function UploadInvoiceModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
 
-      <DialogContent
-        showCloseButton={false}
-        id="upload-invoice-modal"
-      >
+      <DialogContent showCloseButton={false} id="upload-invoice-modal">
         {/* ── Header ── */}
         <DialogHeader>
           <DialogTitle>Confirm Done</DialogTitle>
@@ -286,14 +292,12 @@ export function UploadInvoiceModal({
           {/* Uploaded files list */}
           {files.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="text-base font-medium text-white">
-                Uploaded Files
-              </p>
+              <p className="text-base font-medium text-white">Uploaded Files</p>
               <div className="flex flex-col gap-2">
                 {files.map((uf, index) => (
                   <div
                     key={`${uf.file.name}-${index}`}
-                    className="flex items-center justify-between rounded-lg border border-[#282828] py-2.5 pl-4 pr-2.5"
+                    className="flex items-center justify-between rounded-lg border border-[#282828] py-2.5 pr-2.5 pl-4"
                   >
                     <div className="flex flex-col gap-0.5">
                       <p className="text-sm font-medium text-[#e3e4e6]">

@@ -236,12 +236,15 @@ export function RecentTransactions({
         </div>
       </div>
 
-      {/* ── Table (reuses the generic DataTable from components/data-table.tsx) ── */}
+      {/* ── Table (read-only, 5 latest only) ── */}
       <DataTable
         columns={columns}
-        data={transactions}
+        data={transactions.slice(0, 5)}
         emptyMessage="No transactions in this period"
-        pageSize={10}
+        pageSize={5}
+        hidePagination
+        hideColumnToggle
+        disableRowSelection
       />
     </div>
   )

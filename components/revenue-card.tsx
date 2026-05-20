@@ -2,6 +2,12 @@
 
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface RevenueCardProps {
   title?: string
@@ -39,27 +45,38 @@ export function RevenueCard({
           {title}
         </p>
 
-        {/* Percentage change badge */}
+        {/* Percentage change badge with tooltip */}
         {withEndLabel && (
-          <div
-            className={cn(
-              "flex items-center gap-1 rounded border px-2 py-1.5 text-xs font-medium whitespace-nowrap",
-              isPositive
-                ? "border-[#090f01] bg-[rgba(131,176,71,0.04)] text-[#83b047]"
-                : "border-[#3e1c1c] bg-[rgba(255,80,80,0.04)] text-[#E38752]"
-            )}
-          >
-            {/* Up/Down arrow icon */}
-            <span className="relative block size-3 shrink-0">
-              <Image
-                alt="arrow_up"
-                src={isPositive ? "/trending_up.svg" : "/trending_down.svg"}
-                width={16}
-                height={16}
-              />
-            </span>
-            <span>{percentageChange}</span>
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className={cn(
+                    "flex cursor-help items-center gap-1 rounded border px-2 py-1.5 text-xs font-medium whitespace-nowrap",
+                    isPositive
+                      ? "border-[#090f01] bg-[rgba(131,176,71,0.04)] text-[#83b047]"
+                      : "border-[#3e1c1c] bg-[rgba(255,80,80,0.04)] text-[#E38752]"
+                  )}
+                >
+                  {/* Up/Down arrow icon */}
+                  <span className="relative block size-3 shrink-0">
+                    <Image
+                      alt="arrow_up"
+                      src={isPositive ? "/trending_up.svg" : "/trending_down.svg"}
+                      width={16}
+                      height={16}
+                    />
+                  </span>
+                  <span>{percentageChange}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={6} className="bg-[#1e1e1e] text-[#ededed] border border-[#2e2e2e]" style={{ "--tooltip-bg": "#1e1e1e" } as React.CSSProperties}>
+                {percentageChange === "100.00%"
+                  ? "No data from last month"
+                  : "Compared to last 30 days"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
 

@@ -8,6 +8,7 @@ import {
   ProfitChart,
   RecentTransactions,
 } from "@/components/dashboard"
+import { getDashboardStats } from "@/services/transactions/get-dashboard-stats"
 
 export default async function Page() {
   const session = await auth()
@@ -16,6 +17,9 @@ export default async function Page() {
   if (role === "gic" || role === "lotto") {
     redirect("/dashboard/operations/fiat-to-crypto")
   }
+
+  // Fetch all dashboard data from the database (role-aware profit)
+  const { stats, chartData, networkSeries, recentTransactions } = await getDashboardStats(role ?? "admin")
 
   return (
     <div className="flex flex-1 flex-col">
@@ -34,14 +38,15 @@ export default async function Page() {
           </div>
 
           {/* Stat cards */}
-          <DashboardStatsCard />
+          <DashboardStatsCard stats={stats} />
 
           {/* Daily Profit Breakdown chart */}
-          <ProfitChart />
+          <ProfitChart data={chartData} networkSeries={networkSeries} />
 
           {/* Recent Transactions table */}
           <Suspense>
             <RecentTransactions
+              transactions={recentTransactions}
               searchKey="q"
               filterKey="filter"
               currencyKey="currency"

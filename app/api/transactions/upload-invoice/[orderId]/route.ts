@@ -1,24 +1,38 @@
 import { NextRequest } from "next/server"
-import { withErrorHandler, badRequest, successResponse } from "@/lib/api-response"
+import { withErrorHandler, badRequest, successResponse, unauthorized } from "@/lib/api-response"
 import { s3Client } from "@/lib/s3"
 import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { prisma } from "@/lib/prisma"
+import { authenticateApiRequest } from "@/lib/auth-api-key"
 
-export const POST = withErrorHandler(async (req: NextRequest) => {
-    const formData = await req.formData()
-    const transactionIdStr = formData.get("transactionId") as string
-    const file = formData.get("file") as File | null
+export const POST = withErrorHandler(async (req: NextRequest, props: { params: Promise<{ orderId: string }> }) => {
+    const authResult = await authenticateApiRequest(req)
+    if (!authResult.authorized) return unauthorized("Requires authentication")
 
-    if (!transactionIdStr) {
-        return badRequest("transactionId is required")
+    const params = await props.params
+    const orderId = params.orderId
+
+    if (!orderId) {
+        return badRequest("orderId parameter is required")
     }
+
+    console.log("Requesting with the orders: ")
+    console.log({ orderId })
+
+    const transaction = await prisma.transactions.findFirst({
+        where: { order_id: orderId }
+    })
+
+    if (!transaction) {
+        return badRequest("Transaction not found")
+    }
+
+    const formData = await req.formData()
+    const file = formData.get("file") as File | null
+    const altText = (formData.get("alt") as string) || `Invoice image`
+
     if (!file) {
         return badRequest("No file uploaded")
-    }
-
-    const transactionId = parseInt(transactionIdStr, 10)
-    if (isNaN(transactionId)) {
-        return badRequest("Invalid transactionId")
     }
 
     // 1. Convert file object to buffer
@@ -29,7 +43,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     const rootPath = process.env.S3_ROOT_PATH || "spinzopay_v2"
     const uniqueId = crypto.randomUUID()
     const extension = file.name.split(".").pop() || "png"
-    const key = `${rootPath}/invoices/${transactionId}/${uniqueId}.${extension}`
+    const key = `${rootPath}/invoices/${transaction.id}/${uniqueId}.${extension}`
 
     // 3. Upload to S3-compatible bucket
     const bucketName = process.env.S3_BUCKET || ""
@@ -50,7 +64,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     // 5. Create media record in Database
     const mediaRecord = await prisma.media.create({
         data: {
-            alt: `Invoice for transaction ${transactionId}`,
+            alt: altText,
             url: fileUrl,
             filename: file.name,
             mime_type: file.type,
@@ -60,7 +74,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
     // 6. Update transaction to link the media record ID
     await prisma.transactions.update({
-        where: { id: transactionId },
+        where: { id: transaction.id },
         data: {
             invoice_image_id: mediaRecord.id,
         },

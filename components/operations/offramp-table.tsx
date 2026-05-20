@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { type ColumnDef } from "@tanstack/react-table"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
@@ -25,6 +26,7 @@ import {
 
 import { DataTable } from "../data-table"
 import { UploadTxHashModal } from "./input-txhash-modal"
+import { getExplorerTxUrl, getExplorerName } from "@/lib/explorer"
 
 export interface OfframpTransaction {
   id: string
@@ -46,13 +48,78 @@ export interface OfframpTransaction {
   transactionProfitSpread: string
   targetAddress: string
   treasuryAddress: string
+  networkSymbol: string
   txHash: string
   createdAt: string
   lastUpdated: string
   lastUpdatedBy: string
+  exchangeRate: string
+  invoiceUrl?: string | null
 }
 
-const columns: ColumnDef<OfframpTransaction>[] = [
+/* ── Lightbox for image preview ── */
+function ImagePreviewCell({ url }: { url: string | null | undefined }) {
+  const [open, setOpen] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!url) {
+    return <span className="text-xs text-[#4e4e4e]">-</span>
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="group relative size-10 overflow-hidden rounded border border-[#282828] transition-all hover:border-[#4e4e4e]"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={url}
+          alt="Invoice"
+          className="size-full object-cover transition-transform group-hover:scale-110"
+        />
+      </button>
+
+      {/* Lightbox overlay */}
+      {open &&
+        mounted &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          >
+            <div
+              className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-lg border border-[#282828] bg-[#121212] shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+              >
+                ✕
+              </button>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt="Invoice preview"
+                className="max-h-[90vh] max-w-[90vw] object-contain"
+              />
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
+  )
+}
+
+const baseColumns: ColumnDef<OfframpTransaction>[] = [
   {
     accessorKey: "id",
     header: "ID",
@@ -88,6 +155,13 @@ const columns: ColumnDef<OfframpTransaction>[] = [
     header: "LOTTO RECEIVED",
     cell: ({ row }) => (
       <span className="text-xs">{row.getValue("totalReceived")}</span>
+    ),
+  },
+  {
+    accessorKey: "exchangeRate",
+    header: "EXCHANGE RATE",
+    cell: ({ row }) => (
+      <span className="text-xs">{row.getValue("exchangeRate")}</span>
     ),
   },
   {
@@ -128,13 +202,50 @@ const columns: ColumnDef<OfframpTransaction>[] = [
     ),
   },
   {
+    id: "invoicePreview",
+    header: "INVOICE",
+    size: 80,
+    cell: ({ row }) => <ImagePreviewCell url={row.original.invoiceUrl} />,
+  },
+  {
     accessorKey: "txHash",
     header: "PROOF (TX HASH)",
     cell: ({ row }) => {
       const tx = row.getValue("txHash") as string
+      const networkSymbol = row.original.networkSymbol
+      const explorerUrl = getExplorerTxUrl(networkSymbol, tx)
+      const explorerName = getExplorerName(networkSymbol)
+
+      if (!tx || tx === "-") {
+        return <span className="font-mono text-xs text-[#4e4e4e]">-</span>
+      }
+
+      if (explorerUrl) {
+        return (
+          <a
+            href={explorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`View on ${explorerName}`}
+            className="group inline-flex items-center gap-1 font-mono text-xs text-[#83b047] transition-colors hover:text-[#a0d060]"
+          >
+            <span>{tx.slice(0, 10)}...</span>
+            <svg
+              className="size-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10M10 2h4v4M7 9l7-7" />
+            </svg>
+          </a>
+        )
+      }
+
       return (
         <span className="font-mono text-xs">
-          {tx && tx !== "-" ? `${tx.slice(0, 10)}...` : tx || "-"}
+          {tx.slice(0, 10)}...
         </span>
       )
     },
@@ -162,13 +273,42 @@ const columns: ColumnDef<OfframpTransaction>[] = [
   },
 ]
 
+function getColumns(role?: string): ColumnDef<OfframpTransaction>[] {
+  const statusColumn: ColumnDef<OfframpTransaction> = {
+    accessorKey: "status",
+    header: "STATUS",
+    cell: ({ row }) => (
+      <TransactionStatusChip status={row.getValue("status") as string} role={role} />
+    ),
+  }
+
+  if (role === "gic" || role === "lotto") {
+    const hiddenKeys = [
+      "profitUsdt",
+      "profitPercentage",
+      "spinzoProfit",
+      "transactionProfitSpread"
+    ];
+    return baseColumns
+      .map(c => ((c as any).accessorKey === "status" ? statusColumn : c))
+      .filter(c => {
+        const key = (c as any).accessorKey || c.id;
+        return !hiddenKeys.includes(key);
+      });
+  }
+  return baseColumns.map(c => ((c as any).accessorKey === "status" ? statusColumn : c));
+}
+
 /* ── Dropdown action cell ── */
 function OfframpActionCell({ row }: { row: any }) {
+  const role = (row as any).table?.options?.meta?.role || "admin";
   const [loading, setLoading] = React.useState<string | null>(null)
   const [txHashOpen, setTxHashOpen] = React.useState(false)
+  const [uploadOpen, setUploadOpen] = React.useState(false)
   const queryClient = useQueryClient()
   const status = row.original.status as string
   const transactionId = parseInt(row.original.id, 10)
+  const isInvoiceUploaded = !!row.original.invoiceUrl
 
   const updateStatus = async (newStatus: string) => {
     setLoading(newStatus)
@@ -191,8 +331,38 @@ function OfframpActionCell({ row }: { row: any }) {
     }
   }
 
+  if (role === "gic") {
+    return null; // GIC is strictly read-only
+  }
+
   if (status === "complete") {
     return <span className="text-xs text-[#83b047]">✓ Done</span>
+  }
+
+  // Lotto: only upload tx hash action, no dropdown needed
+  if (role === "lotto") {
+    const isTxSubmitted = !!(row.original.txHash && row.original.txHash !== "-")
+    if (isTxSubmitted) {
+      return <span className="text-xs text-[#4e4e4e]">Tx Hash Submitted</span>
+    }
+    return (
+      <>
+        <Button
+          variant="outline"
+          size="xs"
+          onClick={() => setTxHashOpen(true)}
+          disabled={loading !== null}
+        >
+          <HugeiconsIcon icon={FilesIcon} className="mr-1.5 h-3 w-3" />
+          Upload Tx Hash
+        </Button>
+        <UploadTxHashModal
+          open={txHashOpen}
+          onOpenChange={setTxHashOpen}
+          transactionId={transactionId}
+        />
+      </>
+    )
   }
 
   const canConfirmArrival =
@@ -204,58 +374,74 @@ function OfframpActionCell({ row }: { row: any }) {
     status === "processing" ||
     status === "fiat_arrival"
 
+  // Admin dropdown
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="h-8 w-8 p-0"
-          disabled={loading !== null}
-        >
-          <span className="sr-only">Open menu</span>
-          {loading ? (
-            <span className="animate-spin text-xs">⏳</span>
-          ) : (
-            <HugeiconsIcon
-              icon={MoreHorizontalCircle01Icon}
-              className="h-4 w-4"
-            />
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[200px]">
-        <DropdownMenuItem onClick={() => setTxHashOpen(true)}>
-          <HugeiconsIcon icon={FilesIcon} className="mr-2 h-4 w-4" />
-          Upload Tx Hash
-        </DropdownMenuItem>
-        {canConfirmArrival && (
-          <DropdownMenuItem onClick={() => updateStatus("crypto_arrival")}>
-            <HugeiconsIcon icon={PackageReceiveIcon} className="mr-2 h-4 w-4" />
-            Confirm Arrival
-          </DropdownMenuItem>
-        )}
-        {canMarkComplete && (
-          <DropdownMenuItem
-            onClick={() => updateStatus("complete")}
-            className="text-[#83b047] focus:text-[#83b047]"
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            disabled={loading !== null}
           >
-            <HugeiconsIcon
-              icon={CheckmarkCircle02Icon}
-              className="mr-2 h-4 w-4"
-            />
-            Mark as Done
+            <span className="sr-only">Open menu</span>
+            {loading ? (
+              <span className="animate-spin text-xs">⏳</span>
+            ) : (
+              <HugeiconsIcon
+                icon={MoreHorizontalCircle01Icon}
+                className="h-4 w-4"
+              />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-[200px]">
+          <DropdownMenuItem
+            className="disabled:cursor-not-allowed"
+            onClick={() => setUploadOpen(true)}
+            disabled={isInvoiceUploaded}
+          >
+            <HugeiconsIcon icon={FilesIcon} className="mr-2 h-4 w-4" />
+            Upload Invoice
           </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {canConfirmArrival && (
+            <DropdownMenuItem onClick={() => updateStatus("crypto_arrival")}>
+              <HugeiconsIcon icon={PackageReceiveIcon} className="mr-2 h-4 w-4" />
+              Confirm Arrival
+            </DropdownMenuItem>
+          )}
+          {canMarkComplete && (
+            <DropdownMenuItem
+              onClick={() => updateStatus("complete")}
+              className="text-[#83b047] focus:text-[#83b047]"
+            >
+              <HugeiconsIcon
+                icon={CheckmarkCircle02Icon}
+                className="mr-2 h-4 w-4"
+              />
+              Mark as Done
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <UploadInvoiceModal
+        transactionId={row.original.id}
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+      >
+        <span />
+      </UploadInvoiceModal>
+    </>
   )
 }
 
 interface OfframpTableProps {
   data?: OfframpTransaction[]
+  role?: string
 }
 
-export function OfframpTable({ data: initialData = [] }: OfframpTableProps) {
+export function OfframpTable({ data: initialData = [], role }: OfframpTableProps) {
   const searchParams = useSearchParams()
   const q = searchParams.get("q") || ""
   const filter = searchParams.get("filter") || ""
@@ -277,6 +463,8 @@ export function OfframpTable({ data: initialData = [] }: OfframpTableProps) {
     initialData: initialData.length > 0 ? initialData : undefined,
   })
 
+  const columns = React.useMemo(() => getColumns(role), [role])
+
   return (
     <DataTable
       columns={columns}
@@ -285,6 +473,7 @@ export function OfframpTable({ data: initialData = [] }: OfframpTableProps) {
         isLoading ? "Loading transactions..." : "No transactions in this period"
       }
       pageSize={10}
+      meta={{ role }}
     />
   )
 }

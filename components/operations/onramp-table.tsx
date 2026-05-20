@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { type ColumnDef } from "@tanstack/react-table"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
@@ -25,6 +26,8 @@ import {
 
 import { BankDetailsModal } from "@/components/operations/bank-details-modal"
 import { DataTable } from "../data-table"
+import { UploadTxHashModal } from "./input-txhash-modal"
+import { getExplorerTxUrl, getExplorerName } from "@/lib/explorer"
 
 export interface OnrampTransaction {
   id: string
@@ -46,6 +49,7 @@ export interface OnrampTransaction {
   transactionProfitSpread: string
   targetAddress: string
   treasuryAddress: string
+  networkSymbol?: string
   txHash: string
   createdAt: string
   lastUpdated: string
@@ -56,11 +60,17 @@ export interface OnrampTransaction {
     accountName: string
     accountNumber: string
   } | null
+  exchangeRate: string
 }
 
 /* ── Lightbox for image preview ── */
 function ImagePreviewCell({ url }: { url: string | null | undefined }) {
   const [open, setOpen] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   if (!url) {
     return <span className="text-xs text-[#4e4e4e]">-</span>
@@ -82,37 +92,40 @@ function ImagePreviewCell({ url }: { url: string | null | undefined }) {
       </button>
 
       {/* Lightbox overlay */}
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={() => setOpen(false)}
-        >
+      {open &&
+        mounted &&
+        createPortal(
           <div
-            className="relative max-h-[85vh] max-w-[85vw] overflow-hidden rounded-lg border border-[#282828] bg-[#121212] shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
           >
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+            <div
+              className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-lg border border-[#282828] bg-[#121212] shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
-              ✕
-            </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={url}
-              alt="Invoice preview"
-              className="max-h-[85vh] max-w-[85vw] object-contain"
-            />
-          </div>
-        </div>
-      )}
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+              >
+                ✕
+              </button>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt="Invoice preview"
+                className="max-h-[90vh] max-w-[90vw] object-contain"
+              />
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   )
 }
 
-const columns: ColumnDef<OnrampTransaction>[] = [
+const baseColumns: ColumnDef<OnrampTransaction>[] = [
   {
     accessorKey: "id",
     header: "ID",
@@ -151,6 +164,16 @@ const columns: ColumnDef<OnrampTransaction>[] = [
     ),
   },
   {
+    accessorKey: "amountReceivedFromExchange",
+    header: "AMOUNT RECEIVED FROM EXCHANGE",
+    cell: ({ row }) => {
+      const lottoReceived = parseFloat(row.original.totalReceived)
+      const markupProfit = parseFloat(row.original.profitUsdt)
+      const receivedFromExchange = lottoReceived + markupProfit
+      return <span className="text-xs">{receivedFromExchange} USDT</span>
+    },
+  },
+  {
     id: "bankDetails",
     header: "BANK DETAILS",
     cell: ({ row }) => {
@@ -171,6 +194,56 @@ const columns: ColumnDef<OnrampTransaction>[] = [
     header: "INVOICE",
     size: 80,
     cell: ({ row }) => <ImagePreviewCell url={row.original.invoiceUrl} />,
+  },
+  {
+    accessorKey: "txHash",
+    header: "PROOF (TX HASH)",
+    cell: ({ row }) => {
+      const tx = row.getValue("txHash") as string
+      const networkSymbol = row.original.networkSymbol || "ETH"
+      const explorerUrl = getExplorerTxUrl(networkSymbol, tx)
+      const explorerName = getExplorerName(networkSymbol)
+
+      if (!tx || tx === "-") {
+        return <span className="font-mono text-xs text-[#4e4e4e]">-</span>
+      }
+
+      if (explorerUrl) {
+        return (
+          <a
+            href={explorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`View on ${explorerName}`}
+            className="group inline-flex items-center gap-1 font-mono text-xs text-[#83b047] transition-colors hover:text-[#a0d060]"
+          >
+            <span>{tx.slice(0, 10)}...</span>
+            <svg
+              className="size-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10M10 2h4v4M7 9l7-7" />
+            </svg>
+          </a>
+        )
+      }
+
+      return (
+        <span className="font-mono text-xs">
+          {tx.slice(0, 10)}...
+        </span>
+      )
+    },
+  },
+  {
+    accessorKey: "exchangeRate",
+    header: "EXCHANGE RATE",
+    cell: ({ row }) => (
+      <span className="text-xs">{row.getValue("exchangeRate")}</span>
+    ),
   },
   {
     accessorKey: "profitUsdt",
@@ -230,10 +303,43 @@ const columns: ColumnDef<OnrampTransaction>[] = [
   },
 ]
 
+function getColumns(role?: string): ColumnDef<OnrampTransaction>[] {
+  const statusColumn: ColumnDef<OnrampTransaction> = {
+    accessorKey: "status",
+    header: "STATUS",
+    cell: ({ row }) => (
+      <TransactionStatusChip status={row.getValue("status") as string} role={role} />
+    ),
+  }
+
+  if (role === "gic" || role === "lotto") {
+    const hiddenKeys = [
+      "amountReceivedFromExchange",
+      "profitUsdt",
+      "profitPercentage",
+      "spinzoProfit",
+      "transactionProfitSpread"
+    ];
+    return baseColumns
+      .map(c => ((c as any).accessorKey === "status" ? statusColumn : c))
+      .filter(c => {
+        const key = (c as any).accessorKey || c.id;
+        return !hiddenKeys.includes(key);
+      });
+  }
+  return baseColumns.map(c => ((c as any).accessorKey === "status" ? statusColumn : c));
+}
+
 /* ── Dropdown action cell ── */
 function OnrampActionCell({ row }: { row: any }) {
+  // We need the role here. Ideally passed through row.options.meta, but we can also just fetch session or pass it.
+  // Actually, wait, React Table cell can access `table.options.meta?.role`.
+  // Let's use `row.original` status and let `OnrampTable` handle passing role via meta or we can just access it.
+  const role = (row as any).table?.options?.meta?.role || "admin";
+  
   const [loading, setLoading] = React.useState<string | null>(null)
   const [uploadOpen, setUploadOpen] = React.useState(false)
+  const [txHashOpen, setTxHashOpen] = React.useState(false)
   const queryClient = useQueryClient()
   const status = row.original.status as string
   const transactionId = parseInt(row.original.id, 10)
@@ -261,8 +367,39 @@ function OnrampActionCell({ row }: { row: any }) {
     }
   }
 
+  if (role === "gic") {
+    return null; // GIC is strictly read-only
+  }
+
   if (status === "complete") {
     return <span className="text-xs text-[#83b047]">✓ Done</span>
+  }
+
+  // Lotto: only upload invoice action, no dropdown needed
+  if (role === "lotto") {
+    if (isInvoiceUploaded) {
+      return <span className="text-xs text-[#4e4e4e]">Invoice Submitted</span>
+    }
+    return (
+      <>
+        <Button
+          variant="outline"
+          size="xs"
+          onClick={() => setUploadOpen(true)}
+          disabled={loading !== null}
+        >
+          <HugeiconsIcon icon={CloudUploadIcon} className="mr-1.5 h-3 w-3" />
+          Upload Invoice
+        </Button>
+        <UploadInvoiceModal
+          transactionId={row.original.id}
+          open={uploadOpen}
+          onOpenChange={setUploadOpen}
+        >
+          <span />
+        </UploadInvoiceModal>
+      </>
+    )
   }
 
   const canConfirmArrival =
@@ -274,6 +411,7 @@ function OnrampActionCell({ row }: { row: any }) {
     status === "processing" ||
     status === "crypto_arrival"
 
+  // Admin dropdown
   return (
     <>
       <DropdownMenu>
@@ -295,13 +433,9 @@ function OnrampActionCell({ row }: { row: any }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-[200px]">
-          <DropdownMenuItem
-            className="disabled:cursor-not-allowed"
-            onClick={() => setUploadOpen(true)}
-            disabled={isInvoiceUploaded}
-          >
+          <DropdownMenuItem onClick={() => setTxHashOpen(true)}>
             <HugeiconsIcon icon={CloudUploadIcon} className="mr-2 h-4 w-4" />
-            Upload Invoice
+            Upload Tx Hash
           </DropdownMenuItem>
           {canConfirmArrival && (
             <DropdownMenuItem onClick={() => updateStatus("fiat_arrival")}>
@@ -327,22 +461,20 @@ function OnrampActionCell({ row }: { row: any }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Upload invoice modal triggered programmatically */}
-      <UploadInvoiceModal
-        transactionId={row.original.id}
-        open={uploadOpen}
-        onOpenChange={setUploadOpen}
-      >
-        <span />
-      </UploadInvoiceModal>
+      <UploadTxHashModal
+        open={txHashOpen}
+        onOpenChange={setTxHashOpen}
+        transactionId={transactionId}
+      />
     </>
   )
 }
 interface OnrampTableProps {
   data?: OnrampTransaction[]
+  role?: string
 }
 
-export function OnrampTable({ data: initialData = [] }: OnrampTableProps) {
+export function OnrampTable({ data: initialData = [], role }: OnrampTableProps) {
   const searchParams = useSearchParams()
   const q = searchParams.get("q") || ""
   const filter = searchParams.get("filter") || ""
@@ -364,6 +496,8 @@ export function OnrampTable({ data: initialData = [] }: OnrampTableProps) {
     initialData: initialData.length > 0 ? initialData : undefined,
   })
 
+  const columns = React.useMemo(() => getColumns(role), [role])
+
   return (
     <DataTable
       columns={columns}
@@ -372,6 +506,7 @@ export function OnrampTable({ data: initialData = [] }: OnrampTableProps) {
         isLoading ? "Loading transactions..." : "No transactions in this period"
       }
       pageSize={10}
+      meta={{ role }}
     />
   )
 }

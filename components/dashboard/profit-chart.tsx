@@ -1,11 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import {
   Area,
   AreaChart,
   CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts"
@@ -18,25 +17,21 @@ import {
 } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
 
+import type { NetworkSeries } from "@/services/transactions/get-dashboard-stats"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 export interface ProfitDataPoint {
   date: string
   usdt: number
   php: number
+  [networkSymbol: string]: number | string
 }
 
 interface ProfitChartProps {
   data?: ProfitDataPoint[]
+  networkSeries?: NetworkSeries[]
   className?: string
 }
-
-// ─── Chart config (colors match Figma legend dots) ───────────────────────────
-const chartConfig = {
-  usdt: {
-    label: "USDT Profit",
-    color: "#83b047", // green
-  },
-} satisfies ChartConfig
 
 // ─── Placeholder data (zeros while real data loads) ──────────────────────────
 const PLACEHOLDER_DATA: ProfitDataPoint[] = Array.from(
@@ -48,33 +43,70 @@ const PLACEHOLDER_DATA: ProfitDataPoint[] = Array.from(
   })
 )
 
-// ─── Legend Indicator ────────────────────────────────────────────────────────
-function LegendIndicator({
-  color,
+const TOTAL_COLOR = "#83b047"
+
+// ─── Network toggle pill ─────────────────────────────────────────────────────
+function NetworkToggle({
   label,
-  sub,
+  color,
+  active,
+  onToggle,
 }: {
-  color: string
   label: string
-  sub: string
+  color: string
+  active: boolean
+  onToggle: () => void
 }) {
   return (
-    <div className="flex items-center gap-1">
+    <button
+      type="button"
+      onClick={onToggle}
+      className={cn(
+        "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all",
+        active
+          ? "border-transparent bg-white/[0.06] text-[#ededed]"
+          : "border-[#2e2e2e] bg-transparent text-[#4e4e4e]"
+      )}
+    >
       <span
-        className="block size-2 shrink-0 rounded-full"
+        className={cn(
+          "block size-2 shrink-0 rounded-full transition-opacity",
+          !active && "opacity-30"
+        )}
         style={{ backgroundColor: color }}
       />
-      <span className="text-[12px] font-medium text-[#ededed]">{label}</span>
-      <span className="text-[12px] text-[#4e4e4e]">{sub}</span>
-    </div>
+      {label}
+    </button>
   )
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export function ProfitChart({
   data = PLACEHOLDER_DATA,
+  networkSeries = [],
   className,
 }: ProfitChartProps) {
+  // "total" is always available; each network is toggleable
+  const [activeNetworks, setActiveNetworks] = useState<Set<string>>(new Set())
+  const [showTotal, setShowTotal] = useState(true)
+
+  const toggleNetwork = (key: string) => {
+    setActiveNetworks((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  // Build dynamic chart config
+  const chartConfig: ChartConfig = {
+    usdt: { label: "Total Profit", color: TOTAL_COLOR },
+  }
+  for (const ns of networkSeries) {
+    chartConfig[ns.key] = { label: ns.label, color: ns.color }
+  }
+
   return (
     <div
       className={cn(
@@ -84,18 +116,28 @@ export function ProfitChart({
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-base font-semibold text-[#ededed]">
           Daily Profit Breakdown
         </p>
 
-        {/* Legend */}
-        <div className="flex items-center gap-3">
-          <LegendIndicator
-            color={chartConfig.usdt.color}
-            label="USDT Profit"
-            sub="Flat → Crypto"
+        {/* Network filter toggles */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <NetworkToggle
+            label="Total"
+            color={TOTAL_COLOR}
+            active={showTotal}
+            onToggle={() => setShowTotal((p) => !p)}
           />
+          {networkSeries.map((ns) => (
+            <NetworkToggle
+              key={ns.key}
+              label={ns.label}
+              color={ns.color}
+              active={activeNetworks.has(ns.key)}
+              onToggle={() => toggleNetwork(ns.key)}
+            />
+          ))}
         </div>
       </div>
 
@@ -106,18 +148,25 @@ export function ProfitChart({
           margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
         >
           <defs>
-            <linearGradient id="gradUsdt" x1="0" y1="0" x2="0" y2="1">
-              <stop
-                offset="5%"
-                stopColor={chartConfig.usdt.color}
-                stopOpacity={0.15}
-              />
-              <stop
-                offset="95%"
-                stopColor={chartConfig.usdt.color}
-                stopOpacity={0}
-              />
+            {/* Total gradient */}
+            <linearGradient id="gradTotal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={TOTAL_COLOR} stopOpacity={0.15} />
+              <stop offset="95%" stopColor={TOTAL_COLOR} stopOpacity={0} />
             </linearGradient>
+            {/* Per-network gradients */}
+            {networkSeries.map((ns) => (
+              <linearGradient
+                key={ns.key}
+                id={`grad-${ns.key}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop offset="5%" stopColor={ns.color} stopOpacity={0.15} />
+                <stop offset="95%" stopColor={ns.color} stopOpacity={0} />
+              </linearGradient>
+            ))}
           </defs>
 
           <CartesianGrid
@@ -162,15 +211,35 @@ export function ProfitChart({
             }
           />
 
-          <Area
-            type="monotone"
-            dataKey="usdt"
-            stroke={chartConfig.usdt.color}
-            strokeWidth={1.5}
-            fill="url(#gradUsdt)"
-            dot={false}
-            activeDot={{ r: 4, fill: chartConfig.usdt.color }}
-          />
+          {/* Total area (always on top for reference) */}
+          {showTotal && (
+            <Area
+              type="monotone"
+              dataKey="usdt"
+              stroke={TOTAL_COLOR}
+              strokeWidth={1.5}
+              fill="url(#gradTotal)"
+              dot={false}
+              activeDot={{ r: 4, fill: TOTAL_COLOR }}
+            />
+          )}
+
+          {/* Per-network areas */}
+          {networkSeries.map(
+            (ns) =>
+              activeNetworks.has(ns.key) && (
+                <Area
+                  key={ns.key}
+                  type="monotone"
+                  dataKey={ns.key}
+                  stroke={ns.color}
+                  strokeWidth={1.5}
+                  fill={`url(#grad-${ns.key})`}
+                  dot={false}
+                  activeDot={{ r: 4, fill: ns.color }}
+                />
+              )
+          )}
         </AreaChart>
       </ChartContainer>
     </div>

@@ -69,22 +69,22 @@ function NavMainItem({ item }: { item: TNavMainData }) {
         className={cn(
           "h-auto transition-all duration-300",
           isParentActive
-            ? "w-[198px] rounded-[8px] border border-[#5E5E5E] bg-[linear-gradient(92deg,#2E2E2E_0%,#1E1E1E_50%)] p-[8px_12px] shadow-lg"
+            ? "w-[198px] rounded-[8px] border border-neutral-200 dark:border-[#5E5E5E] bg-neutral-100 dark:bg-[linear-gradient(92deg,#2E2E2E_0%,#1E1E1E_50%)] p-[8px_12px] shadow-md dark:shadow-lg"
             : "rounded-xl px-3 py-2 hover:bg-sidebar-accent/50"
         )}
       >
         {hasChildren ? (
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex w-full items-center justify-between px-3"
+            className="group/item flex w-full items-center justify-between px-3"
           >
             <div className="flex items-center gap-3">
               <span
                 className={cn(
-                  "transition-colors duration-300",
+                  "inline-block transition-all duration-300 ease-out group-hover/item:rotate-[8deg] group-hover/item:scale-105",
                   isParentActive
-                    ? "text-white [&_img]:brightness-0 [&_img]:invert"
-                    : "text-muted-foreground"
+                    ? "text-sidebar-accent-foreground dark:text-white [&_img]:brightness-0 dark:[&_img]:brightness-0 dark:[&_img]:invert"
+                    : "text-muted-foreground [&_img]:brightness-0 [&_img]:opacity-40 dark:[&_img]:brightness-0 dark:[&_img]:invert dark:[&_img]:opacity-40"
                 )}
               >
                 {item.icon}
@@ -92,7 +92,7 @@ function NavMainItem({ item }: { item: TNavMainData }) {
               <span
                 className={cn(
                   "text-[13px] transition-colors duration-300",
-                  isParentActive ? "text-white" : "text-muted-foreground"
+                  isParentActive ? "text-sidebar-accent-foreground dark:text-white" : "text-muted-foreground"
                 )}
               >
                 {item.name}
@@ -103,22 +103,22 @@ function NavMainItem({ item }: { item: TNavMainData }) {
               className={cn(
                 "size-3.5 transition-transform duration-300",
                 isOpen && "rotate-180",
-                isParentActive ? "text-white" : "text-muted-foreground/60"
+                isParentActive ? "text-sidebar-accent-foreground dark:text-white" : "text-muted-foreground/60"
               )}
             />
           </button>
         ) : (
           <Link
             href={item.url}
-            className="flex w-full items-center justify-between px-3"
+            className="group/item flex w-full items-center justify-between px-3"
           >
             <div className="flex items-center gap-3">
               <span
                 className={cn(
-                  "transition-colors duration-300",
+                  "inline-block transition-all duration-300 ease-out group-hover/item:rotate-[8deg] group-hover/item:scale-105",
                   isParentActive
-                    ? "text-white [&_img]:brightness-0 [&_img]:invert"
-                    : "text-muted-foreground"
+                    ? "text-sidebar-accent-foreground dark:text-white [&_img]:brightness-0 dark:[&_img]:brightness-0 dark:[&_img]:invert"
+                    : "text-muted-foreground [&_img]:brightness-0 [&_img]:opacity-40 dark:[&_img]:brightness-0 dark:[&_img]:invert dark:[&_img]:opacity-40"
                 )}
               >
                 {item.icon}
@@ -126,7 +126,7 @@ function NavMainItem({ item }: { item: TNavMainData }) {
               <span
                 className={cn(
                   "text-[13px] font-semibold transition-colors duration-300",
-                  isParentActive ? "text-white" : "text-muted-foreground"
+                  isParentActive ? "text-sidebar-accent-foreground dark:text-white" : "text-muted-foreground"
                 )}
               >
                 {item.name}
@@ -159,14 +159,14 @@ function NavMainItem({ item }: { item: TNavMainData }) {
                     {/* Vertical white line connector */}
                     <div
                       className={cn(
-                        "absolute left-0 w-px bg-white/10",
+                        "absolute left-0 w-px bg-sidebar-border dark:bg-white/10",
                         index === item.items!.length - 1
                           ? "top-0 h-5"
                           : "top-0 h-full"
                       )}
                     />
                     {/* Horizontal curved branch line */}
-                    <div className="absolute top-5 left-0 h-2.5 w-4 rounded-bl-lg border-b border-l border-white/10" />
+                    <div className="absolute top-5 left-0 h-2.5 w-4 rounded-bl-lg border-b border-l border-sidebar-border dark:border-white/10" />
 
                     <SidebarMenuSubButton
                       asChild
@@ -178,7 +178,7 @@ function NavMainItem({ item }: { item: TNavMainData }) {
                           className={cn(
                             "text-[13px] transition-all duration-300",
                             isSubActive
-                              ? "scale-[1.02] font-bold text-white"
+                              ? "scale-[1.02] font-bold text-sidebar-accent-foreground dark:text-white"
                               : "font-medium text-muted-foreground/60 hover:text-muted-foreground"
                           )}
                         >

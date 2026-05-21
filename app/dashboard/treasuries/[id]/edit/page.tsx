@@ -1,6 +1,9 @@
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { EditTreasuryForm } from "./edit-form"
+
+export const metadata: Metadata = { title: "Edit Treasury" }
 
 export default async function EditTreasuryPage({
   params,
@@ -40,10 +43,10 @@ export default async function EditTreasuryPage({
   }
 
   return (
-    <div className="flex flex-1 flex-col p-8 text-[#ededed]">
-      <div className="mb-8 border-b border-[#282828] pb-4">
+    <div className="flex flex-1 flex-col p-8 text-foreground dark:text-[#ededed]">
+      <div className="mb-8 border-b border-border dark:border-[#282828] pb-4">
         <h1 className="text-xl font-semibold">Edit Treasury</h1>
-        <p className="text-sm text-[#4e4e4e] mt-1">Update wallet details.</p>
+        <p className="text-sm text-muted-foreground dark:text-[#4e4e4e] mt-1">Update wallet details.</p>
       </div>
       <EditTreasuryForm treasury={serializedTreasury} networks={serializedNetworks} />
     </div>

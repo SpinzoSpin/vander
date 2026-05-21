@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { auth } from "@/auth/auth"
 import { isAfter, subDays } from "date-fns"
 import { Suspense } from "react"
@@ -10,6 +11,8 @@ import {
 import { OperationStatsCard } from "@/components/operations/stats-ops-card"
 import { getTransactions } from "@/services/transactions/get-transactions"
 import { mapTransaction } from "@/services/transactions/map-transaction"
+
+export const metadata: Metadata = { title: "Crypto to Fiat" }
 
 export default async function Page(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>

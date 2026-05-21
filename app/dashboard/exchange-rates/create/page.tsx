@@ -258,25 +258,25 @@ export default function CreateExchangeRatePage() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-1 flex-col p-8 text-[#ededed]"
+      className="flex flex-1 flex-col p-8 text-foreground dark:text-[#ededed]"
     >
       {/* Sub Header */}
-      <div className="mb-8 flex items-center justify-between border-b border-[#282828] pb-4">
-        <div className="flex gap-4 text-xs text-[#4e4e4e]">
+      <div className="mb-8 flex items-center justify-between border-b border-border dark:border-[#282828] pb-4">
+        <div className="flex gap-4 text-xs text-muted-foreground dark:text-[#4e4e4e]">
           <span>Draft configuration</span>
         </div>
         <div className="flex items-center gap-2">
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="h-8 border border-[#282828] bg-[#1e1e1e] px-4 text-[#ededed] hover:bg-[#2a2a2a]"
+            className="h-8 border border-border dark:border-[#282828] bg-muted/40 dark:bg-[#1e1e1e] px-4 text-foreground dark:text-[#ededed] hover:bg-muted/80 dark:hover:bg-[#2a2a2a]"
           >
             {isSubmitting ? "Saving..." : "Save"}
           </Button>
           <Button
             type="button"
             variant="outline"
-            className="flex h-8 w-8 items-center justify-center border-[#282828] bg-[#1e1e1e] p-0"
+            className="flex h-8 w-8 items-center justify-center border-border dark:border-[#282828] bg-muted/40 dark:bg-[#1e1e1e] p-0 text-foreground dark:text-white"
           >
             &#8942;
           </Button>
@@ -286,23 +286,23 @@ export default function CreateExchangeRatePage() {
       <div className="flex max-w-[1000px] flex-col gap-8">
         {/* Currency Pair */}
         <div className="flex flex-col gap-2">
-          <Label className="text-sm font-medium text-[#ededed]">
+          <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">
             Currency Pair <span className="text-red-500">*</span>
           </Label>
           <Input
             disabled
             value="USDT/PHP"
-            className="w-full border-[#282828] bg-[#1e1e1e] text-[#4e4e4e]"
+            className="w-full border-border dark:border-[#282828] bg-muted/20 dark:bg-[#1e1e1e] text-muted-foreground dark:text-[#4e4e4e]"
           />
-          <p className="text-xs text-[#4e4e4e]">
+          <p className="text-xs text-muted-foreground dark:text-[#4e4e4e]">
             Fixed pair for this exchange rate configuration.
           </p>
         </div>
 
         {/* USDT -> PHP Pricing */}
-        <div className="relative flex flex-col gap-6 rounded-lg border border-[#282828] bg-[#121212] p-6">
-          <div className="absolute -top-3 left-6 flex items-center gap-2 bg-[#121212] px-2">
-            <span className="text-xs font-semibold tracking-wider text-[#4e4e4e]">
+        <div className="relative flex flex-col gap-6 rounded-lg border border-border dark:border-[#282828] bg-card dark:bg-[#121212] p-6">
+          <div className="absolute -top-3 left-6 flex items-center gap-2 bg-card dark:bg-[#121212] px-2">
+            <span className="text-xs font-semibold tracking-wider text-muted-foreground dark:text-[#4e4e4e]">
               USDT → PHP PRICING
             </span>
             <span className="rounded bg-[#003b5c] px-2 py-0.5 text-[10px] font-bold text-[#4da6ff]">
@@ -312,13 +312,13 @@ export default function CreateExchangeRatePage() {
 
           <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-4">
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">
+              <Label className="text-sm text-foreground dark:text-[#ededed]">
                 Reference Rate (1 USDT = ? PHP)
               </Label>
               <Input
                 type="number"
                 step="any"
-                className="border-[#282828] bg-[#121212]"
+                className="border-border dark:border-[#282828] bg-background dark:bg-[#121212]"
                 {...register("usdtToPhpReferenceRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
@@ -330,25 +330,25 @@ export default function CreateExchangeRatePage() {
                   },
                 })}
               />
-              <p className="text-xs text-[#4e4e4e]">
+              <p className="text-xs text-muted-foreground dark:text-[#4e4e4e]">
                 Original market/reference for this ramp
               </p>
             </div>
 
-            <div className="mt-8 flex items-center justify-center text-[#4e4e4e]">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-[#282828] bg-[#1e1e1e]">
+            <div className="mt-8 flex items-center justify-center text-muted-foreground dark:text-[#4e4e4e]">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border dark:border-[#282828] bg-muted/40 dark:bg-[#1e1e1e]">
                 <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">
+              <Label className="text-sm text-foreground dark:text-[#ededed]">
                 Rate (1 USDT = ? PHP)
               </Label>
               <Input
                 type="number"
                 step="any"
-                className="border-[#282828] bg-[#121212]"
+                className="border-border dark:border-[#282828] bg-background dark:bg-[#121212]"
                 {...register("usdtToPhpRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
@@ -360,7 +360,7 @@ export default function CreateExchangeRatePage() {
                   },
                 })}
               />
-              <p className="text-xs text-[#4e4e4e]">
+              <p className="text-xs text-muted-foreground dark:text-[#4e4e4e]">
                 PHP received per USDT sold
               </p>
             </div>
@@ -368,11 +368,11 @@ export default function CreateExchangeRatePage() {
 
           <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-4">
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">Spinzo Fee (PHP)</Label>
+              <Label className="text-sm text-foreground dark:text-[#ededed]">Spinzo Fee (PHP)</Label>
               <Input
                 type="number"
                 step="any"
-                className="border-[#282828] bg-[#121212]"
+                className="border-border dark:border-[#282828] bg-background dark:bg-[#121212]"
                 {...register("usdtToPhpSpinzoFee", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
@@ -386,16 +386,16 @@ export default function CreateExchangeRatePage() {
               />
             </div>
 
-            <div className="mt-8 flex items-center justify-center font-medium text-[#4e4e4e]">
+            <div className="mt-8 flex items-center justify-center font-medium text-muted-foreground dark:text-[#4e4e4e]">
               +
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">GIC Fee (PHP)</Label>
+              <Label className="text-sm text-foreground dark:text-[#ededed]">GIC Fee (PHP)</Label>
               <Input
                 type="number"
                 step="any"
-                className="border-[#282828] bg-[#121212]"
+                className="border-border dark:border-[#282828] bg-background dark:bg-[#121212]"
                 {...register("usdtToPhpGicFee", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
@@ -409,27 +409,27 @@ export default function CreateExchangeRatePage() {
               />
             </div>
 
-            <div className="mt-8 flex items-center justify-center text-[#4e4e4e]">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-[#282828] bg-[#1e1e1e]">
+            <div className="mt-8 flex items-center justify-center text-muted-foreground dark:text-[#4e4e4e]">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border dark:border-[#282828] bg-muted/40 dark:bg-[#1e1e1e]">
                 <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <Label className="text-xs text-[#4e4e4e]">
+                <Label className="text-xs text-muted-foreground dark:text-[#4e4e4e]">
                   Profit / Spread (PHP)
                 </Label>
-                <div className="flex h-10 items-center rounded-md border border-[#282828] bg-[#121212] px-3">
-                  <span className="font-medium text-[#ededed]">
+                <div className="flex h-10 items-center rounded-md border border-border dark:border-[#282828] bg-muted/20 dark:bg-[#121212] px-3">
+                  <span className="font-medium text-foreground dark:text-[#ededed]">
                     {usdtToPhpSpread}
                   </span>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <Label className="text-xs text-[#4e4e4e]">Spread (%)</Label>
-                <div className="flex h-10 items-center rounded-md border border-[#282828] bg-[#121212] px-3">
-                  <span className="font-medium text-[#ededed]">
+                <Label className="text-xs text-muted-foreground dark:text-[#4e4e4e]">Spread (%)</Label>
+                <div className="flex h-10 items-center rounded-md border border-border dark:border-[#282828] bg-muted/20 dark:bg-[#121212] px-3">
+                  <span className="font-medium text-foreground dark:text-[#ededed]">
                     {usdtToPhpSpreadPercentage}%
                   </span>
                 </div>
@@ -439,9 +439,9 @@ export default function CreateExchangeRatePage() {
         </div>
 
         {/* PHP -> USDT Pricing */}
-        <div className="relative mt-2 flex flex-col gap-6 rounded-lg border border-[#282828] bg-[#121212] p-6">
-          <div className="absolute -top-3 left-6 flex items-center gap-2 bg-[#121212] px-2">
-            <span className="text-xs font-semibold tracking-wider text-[#4e4e4e]">
+        <div className="relative mt-2 flex flex-col gap-6 rounded-lg border border-border dark:border-[#282828] bg-card dark:bg-[#121212] p-6">
+          <div className="absolute -top-3 left-6 flex items-center gap-2 bg-card dark:bg-[#121212] px-2">
+            <span className="text-xs font-semibold tracking-wider text-muted-foreground dark:text-[#4e4e4e]">
               PHP → USDT PRICING
             </span>
             <span className="rounded bg-[#003b5c] px-2 py-0.5 text-[10px] font-bold text-[#4da6ff]">
@@ -451,13 +451,13 @@ export default function CreateExchangeRatePage() {
 
           <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-4">
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">
+              <Label className="text-sm text-foreground dark:text-[#ededed]">
                 Reference Rate (1 PHP = ? USDT)
               </Label>
               <Input
                 type="number"
                 step="any"
-                className="border-[#282828] bg-[#121212]"
+                className="border-border dark:border-[#282828] bg-background dark:bg-[#121212]"
                 {...register("phpToUsdtReferenceRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
@@ -469,25 +469,25 @@ export default function CreateExchangeRatePage() {
                   },
                 })}
               />
-              <p className="text-xs text-[#4e4e4e]">
+              <p className="text-xs text-muted-foreground dark:text-[#4e4e4e]">
                 Original market/reference for this ramp
               </p>
             </div>
 
-            <div className="mt-8 flex items-center justify-center text-[#4e4e4e]">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-[#282828] bg-[#1e1e1e]">
+            <div className="mt-8 flex items-center justify-center text-muted-foreground dark:text-[#4e4e4e]">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border dark:border-[#282828] bg-muted/40 dark:bg-[#1e1e1e]">
                 <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">
+              <Label className="text-sm text-foreground dark:text-[#ededed]">
                 Rate (1 PHP = ? USDT)
               </Label>
               <Input
                 type="number"
                 step="any"
-                className="border-[#282828] bg-[#121212]"
+                className="border-border dark:border-[#282828] bg-background dark:bg-[#121212]"
                 {...register("phpToUsdtRate", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
@@ -499,7 +499,7 @@ export default function CreateExchangeRatePage() {
                   },
                 })}
               />
-              <p className="text-xs text-[#4e4e4e]">
+              <p className="text-xs text-muted-foreground dark:text-[#4e4e4e]">
                 USDT received per PHP spent
               </p>
             </div>
@@ -507,11 +507,11 @@ export default function CreateExchangeRatePage() {
 
           <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-4">
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">Spinzo Fee</Label>
+              <Label className="text-sm text-foreground dark:text-[#ededed]">Spinzo Fee</Label>
               <Input
                 type="number"
                 step="any"
-                className="border-[#282828] bg-[#121212]"
+                className="border-border dark:border-[#282828] bg-background dark:bg-[#121212]"
                 {...register("phpToUsdtSpinzoFee", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
@@ -525,16 +525,16 @@ export default function CreateExchangeRatePage() {
               />
             </div>
 
-            <div className="mt-8 flex items-center justify-center font-medium text-[#4e4e4e]">
+            <div className="mt-8 flex items-center justify-center font-medium text-muted-foreground dark:text-[#4e4e4e]">
               +
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-[#ededed]">GIC Fee </Label>
+              <Label className="text-sm text-foreground dark:text-[#ededed]">GIC Fee</Label>
               <Input
                 type="number"
                 step="any"
-                className="border-[#282828] bg-[#121212]"
+                className="border-border dark:border-[#282828] bg-background dark:bg-[#121212]"
                 {...register("phpToUsdtGicFee", {
                   onChange: (e) => {
                     const val = Number(e.target.value)
@@ -548,27 +548,27 @@ export default function CreateExchangeRatePage() {
               />
             </div>
 
-            <div className="mt-8 flex items-center justify-center text-[#4e4e4e]">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-[#282828] bg-[#1e1e1e]">
+            <div className="mt-8 flex items-center justify-center text-muted-foreground dark:text-[#4e4e4e]">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border dark:border-[#282828] bg-muted/40 dark:bg-[#1e1e1e]">
                 <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <Label className="text-xs text-[#4e4e4e]">
+                <Label className="text-xs text-muted-foreground dark:text-[#4e4e4e]">
                   Profit / Spread (USDT)
                 </Label>
-                <div className="flex h-10 items-center rounded-md border border-[#282828] bg-[#121212] px-3">
-                  <span className="font-medium text-[#ededed]">
+                <div className="flex h-10 items-center rounded-md border border-border dark:border-[#282828] bg-muted/20 dark:bg-[#121212] px-3">
+                  <span className="font-medium text-foreground dark:text-[#ededed]">
                     {phpToUsdtSpread}
                   </span>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <Label className="text-xs text-[#4e4e4e]">Spread (%)</Label>
-                <div className="flex h-10 items-center rounded-md border border-[#282828] bg-[#121212] px-3">
-                  <span className="font-medium text-[#ededed]">
+                <Label className="text-xs text-muted-foreground dark:text-[#4e4e4e]">Spread (%)</Label>
+                <div className="flex h-10 items-center rounded-md border border-border dark:border-[#282828] bg-muted/20 dark:bg-[#121212] px-3">
+                  <span className="font-medium text-foreground dark:text-[#ededed]">
                     {phpToUsdtSpreadPercentage}%
                   </span>
                 </div>
@@ -585,11 +585,11 @@ export default function CreateExchangeRatePage() {
             onCheckedChange={(checked) =>
               setValue("isActive", checked as boolean)
             }
-            className="border-[#282828] data-[state=checked]:border-[#83b047] data-[state=checked]:bg-[#83b047]"
+            className="border-border dark:border-[#282828] data-[state=checked]:border-[#83b047] data-[state=checked]:bg-[#83b047]"
           />
           <Label
             htmlFor="active"
-            className="cursor-pointer text-sm font-medium text-[#ededed]"
+            className="cursor-pointer text-sm font-medium text-foreground dark:text-[#ededed]"
           >
             Active
           </Label>

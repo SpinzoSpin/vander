@@ -1,4 +1,7 @@
+import type { Metadata } from "next"
 import { Register } from "@/components/auth/register"
+
+export const metadata: Metadata = { title: "Sign Up" }
 
 export default function SignUpPage() {
   return (

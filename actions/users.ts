@@ -54,3 +54,95 @@ export async function createUserAction(formData: FormData) {
     return { error: "Something went wrong" }
   }
 }
+
+// ─── Update User ────────────────────────────────────────────────────────────────
+
+const updateUserSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  email: z.string().email("Invalid email address"),
+  role: z.nativeEnum(Role),
+  password: z
+    .string()
+    .max(32, "Password must be less than 32 characters")
+    .optional()
+    .refine(
+      (val) => !val || val.length >= 8,
+      "Password must be at least 8 characters"
+    ),
+})
+
+export async function updateUserAction(formData: FormData) {
+  try {
+    const session = await auth()
+    const currentRole = (session?.user as any)?.role?.toLowerCase()
+
+    if (currentRole !== "admin") {
+      return { error: "Forbidden: You do not have permission to update users" }
+    }
+
+    const raw = Object.fromEntries(formData.entries())
+
+    // Treat empty password as undefined (no change)
+    const parsed = updateUserSchema.parse({
+      ...raw,
+      password: raw.password && String(raw.password).length > 0 ? raw.password : undefined,
+    })
+
+    // Check if email is taken by another user
+    const existingUser = await prisma.user.findUnique({
+      where: { email: parsed.email },
+    })
+
+    if (existingUser && existingUser.id !== parsed.userId) {
+      return { error: "Another user with this email already exists" }
+    }
+
+    const updateData: Record<string, unknown> = {
+      email: parsed.email,
+      role: parsed.role,
+    }
+
+    if (parsed.password) {
+      updateData.password = saltAndHashPassword(parsed.password)
+    }
+
+    await prisma.user.update({
+      where: { id: parsed.userId },
+      data: updateData,
+    })
+
+    revalidatePath("/dashboard/users")
+
+    return { success: true }
+  } catch (error) {
+    console.log({ error }, "Failed to update user")
+    if (error instanceof z.ZodError) {
+      return { error: error.issues[0].message }
+    }
+    return { error: "Something went wrong" }
+  }
+}
+
+// ─── Delete User ────────────────────────────────────────────────────────────────
+
+export async function deleteUserAction(userId: string) {
+  try {
+    const session = await auth()
+    const currentRole = (session?.user as any)?.role?.toLowerCase()
+
+    if (currentRole !== "admin") {
+      return { error: "Forbidden: You do not have permission to delete users" }
+    }
+
+    await prisma.user.delete({
+      where: { id: userId },
+    })
+
+    revalidatePath("/dashboard/users")
+
+    return { success: true }
+  } catch (error) {
+    console.log({ error }, "Failed to delete user")
+    return { error: "Something went wrong" }
+  }
+}

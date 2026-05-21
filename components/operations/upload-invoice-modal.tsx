@@ -254,8 +254,8 @@ export function UploadInvoiceModal({
           <button
             type="button"
             className={cn(
-              "flex w-full cursor-pointer flex-col items-center gap-4 rounded-lg border border-dashed border-[#282828] p-8 transition-colors",
-              isDragging && "border-[#4e4e4e] bg-[#1a1a1a]"
+              "flex w-full cursor-pointer flex-col items-center gap-4 rounded-lg border border-dashed border-border dark:border-[#282828] p-8 transition-colors",
+              isDragging && "border-muted-foreground bg-muted dark:border-[#4e4e4e] dark:bg-[#1a1a1a]"
             )}
             onClick={() => inputRef.current?.click()}
             onDragOver={handleDragOver}
@@ -267,14 +267,14 @@ export function UploadInvoiceModal({
               <HugeiconsIcon
                 icon={CloudUploadIcon}
                 strokeWidth={1.5}
-                className="size-9 text-[#7d7d7d]"
+                className="size-9 text-muted-foreground dark:text-[#7d7d7d]"
               />
             </div>
             <div className="flex flex-col items-center gap-2">
-              <p className="text-sm font-medium text-[#cfcfcf]">
+              <p className="text-sm font-medium text-foreground dark:text-[#cfcfcf]">
                 Drag or drop your files here
               </p>
-              <p className="text-xs text-[#7d7d7d]">
+              <p className="text-xs text-muted-foreground dark:text-[#7d7d7d]">
                 JPEG, PNG, PDF, and DOC formats, up to 10MB
               </p>
             </div>
@@ -294,19 +294,19 @@ export function UploadInvoiceModal({
           {/* Uploaded files list */}
           {files.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="text-base font-medium text-white">Uploaded Files</p>
+              <p className="text-base font-medium text-foreground dark:text-white">Uploaded Files</p>
               <div className="flex flex-col gap-2">
                 {files.map((uf, index) => (
                   <div
                     key={`${uf.file.name}-${index}`}
-                    className="flex items-center justify-between rounded-lg border border-[#282828] py-2.5 pr-2.5 pl-4"
+                    className="flex items-center justify-between rounded-lg border border-border dark:border-[#282828] py-2.5 pr-2.5 pl-4"
                   >
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-sm font-medium text-[#e3e4e6]">
+                      <p className="text-sm font-medium text-foreground dark:text-[#e3e4e6]">
                         {uf.file.name}
                       </p>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-[#848484]">
+                        <span className="text-xs text-muted-foreground dark:text-[#848484]">
                           {formatFileSize(uf.file.size)}
                         </span>
                         {uf.status === "uploading" && (
@@ -314,9 +314,9 @@ export function UploadInvoiceModal({
                             <HugeiconsIcon
                               icon={Loading03Icon}
                               strokeWidth={2}
-                              className="size-4 animate-spin text-[#848484]"
+                              className="size-4 animate-spin text-muted-foreground dark:text-[#848484]"
                             />
-                            <span className="text-sm text-[#848484]">
+                            <span className="text-sm text-muted-foreground dark:text-[#848484]">
                               Uploading
                             </span>
                           </div>
@@ -332,7 +332,7 @@ export function UploadInvoiceModal({
                     <button
                       type="button"
                       onClick={() => removeFile(index)}
-                      className="flex size-6 items-center justify-center rounded text-[#848484] transition-colors hover:text-white"
+                      className="flex size-6 items-center justify-center rounded text-muted-foreground dark:text-[#848484] transition-colors hover:text-foreground dark:hover:text-white"
                       id={`remove-file-${index}`}
                     >
                       <HugeiconsIcon
@@ -352,14 +352,14 @@ export function UploadInvoiceModal({
             <DialogClose asChild>
               <Button
                 variant="outline"
-                className="h-10 flex-1 border-[#282828] bg-[#1e1e1e] text-xs text-[#ededed] hover:bg-[#282828]"
+                className="h-10 flex-1 border-border dark:border-[#282828] bg-muted/40 dark:bg-[#1e1e1e] text-xs text-foreground dark:text-[#ededed] hover:bg-muted dark:hover:bg-[#282828]"
                 id="upload-invoice-cancel"
               >
                 Cancel
               </Button>
             </DialogClose>
             <Button
-              className="h-10 flex-1 bg-[#ededed] text-sm font-medium text-[#121212] hover:bg-white"
+              className="h-10 flex-1 bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90 dark:bg-[#ededed] dark:text-[#121212] dark:hover:bg-white"
               onClick={handleSubmit}
               disabled={isSubmitting || files.length === 0}
               id="upload-invoice-submit"

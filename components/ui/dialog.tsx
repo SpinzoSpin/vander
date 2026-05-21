@@ -62,7 +62,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 w-full max-w-[393px] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[#1e1e1e] bg-[#121212] text-sm text-foreground shadow-xl duration-200 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-left-1/2 data-open:slide-in-from-top-[48%] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:slide-out-to-left-1/2 data-closed:slide-out-to-top-[48%]",
+          "fixed top-1/2 left-1/2 z-50 w-full max-w-[393px] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border dark:border-[#1e1e1e] bg-background dark:bg-[#121212] text-sm text-foreground shadow-xl duration-200 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-left-1/2 data-open:slide-in-from-top-[48%] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:slide-out-to-left-1/2 data-closed:slide-out-to-top-[48%]",
           className
         )}
         {...props}
@@ -90,7 +90,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-header"
       className={cn(
-        "flex flex-col gap-1 border-b border-[#1e1e1e] p-4",
+        "flex flex-col gap-1 border-b border-border dark:border-[#1e1e1e] p-4",
         className
       )}
       {...props}
@@ -115,7 +115,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-base font-medium text-white", className)}
+      className={cn("text-base font-medium text-foreground dark:text-white", className)}
       {...props}
     />
   )
@@ -128,7 +128,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-sm text-[#848484]", className)}
+      className={cn("text-sm text-muted-foreground dark:text-[#848484]", className)}
       {...props}
     />
   )

@@ -1,6 +1,9 @@
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { EditExchangeRateForm } from "./edit-form"
+
+export const metadata: Metadata = { title: "Edit Exchange Rate" }
 
 export default async function EditExchangeRatePage({
   params,
@@ -44,10 +47,10 @@ export default async function EditExchangeRatePage({
   console.log({ serializedRate })
 
   return (
-    <div className="flex flex-1 flex-col p-8 text-[#ededed]">
-      <div className="mb-8 border-b border-[#282828] pb-4">
+    <div className="flex flex-1 flex-col p-8 text-foreground dark:text-[#ededed]">
+      <div className="mb-8 border-b border-border dark:border-[#282828] pb-4">
         <h1 className="text-xl font-semibold">Edit Exchange Rate</h1>
-        <p className="mt-1 text-sm text-[#4e4e4e]">Update rates manually.</p>
+        <p className="mt-1 text-sm text-muted-foreground dark:text-[#4e4e4e]">Update rates manually.</p>
       </div>
       <EditExchangeRateForm rate={serializedRate} />
     </div>

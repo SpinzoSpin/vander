@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 import { ActionsContainer } from "@/components/actions-container"
 import {
@@ -13,6 +14,8 @@ import { getExchangeRates } from "@/services/exchange-rates/get-rates"
 
 import { auth } from "@/auth/auth"
 import { redirect } from "next/navigation"
+
+export const metadata: Metadata = { title: "Exchange Rates" }
 
 export default async function Page(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -62,7 +65,7 @@ export default async function Page(props: {
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           {/* Header row */}
           <div className="flex items-center justify-between">
-            <p className="text-base font-semibold text-[#ededed]">
+            <p className="text-base font-semibold text-foreground dark:text-white">
               Exchange Rates List
             </p>
             <div className="flex items-center gap-3">

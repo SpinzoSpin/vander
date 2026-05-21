@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 import { auth } from "@/auth/auth"
 import { redirect } from "next/navigation"
@@ -9,6 +10,8 @@ import {
   RecentTransactions,
 } from "@/components/dashboard"
 import { getDashboardStats } from "@/services/transactions/get-dashboard-stats"
+
+export const metadata: Metadata = { title: "Dashboard" }
 
 export default async function Page() {
   const session = await auth()

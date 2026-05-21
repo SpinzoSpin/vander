@@ -64,8 +64,8 @@ function NetworkToggle({
       className={cn(
         "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all",
         active
-          ? "border-transparent bg-white/[0.06] text-[#ededed]"
-          : "border-[#2e2e2e] bg-transparent text-[#4e4e4e]"
+          ? "border-transparent bg-neutral-100 text-neutral-900 dark:bg-white/[0.06] dark:text-[#ededed]"
+          : "border-border dark:border-[#2e2e2e] bg-transparent text-muted-foreground dark:text-[#4e4e4e]"
       )}
     >
       <span
@@ -111,13 +111,13 @@ export function ProfitChart({
     <div
       className={cn(
         "flex w-full flex-col gap-4 rounded-lg border p-4",
-        "border-[#2e2e2e] bg-[#121212]",
+        "border-border dark:border-[#2e2e2e] bg-card dark:bg-[#121212]",
         className
       )}
     >
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-base font-semibold text-[#ededed]">
+        <p className="text-base font-semibold text-foreground dark:text-[#ededed]">
           Daily Profit Breakdown
         </p>
 
@@ -171,7 +171,7 @@ export function ProfitChart({
 
           <CartesianGrid
             vertical={false}
-            stroke="#2e2e2e"
+            stroke="var(--border)"
             strokeDasharray="4 4"
           />
 
@@ -179,7 +179,7 @@ export function ProfitChart({
             dataKey="date"
             tickLine={false}
             axisLine={false}
-            tick={{ fill: "#4e4e4e", fontSize: 10 }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
             tickFormatter={(v: string) =>
               new Date(v).toLocaleDateString("en-US", {
                 month: "short",
@@ -192,7 +192,7 @@ export function ProfitChart({
           <YAxis
             tickLine={false}
             axisLine={false}
-            tick={{ fill: "#4e4e4e", fontSize: 10 }}
+            tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
             tickFormatter={(v: number) => v.toFixed(2)}
             width={40}
           />

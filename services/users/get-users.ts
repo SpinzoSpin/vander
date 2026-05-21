@@ -32,6 +32,7 @@ export async function getUsers({ q, role }: GetUsersParams) {
       role: true,
       createdAt: true,
       updatedAt: true,
+      apiKey: true,
     },
   })
 

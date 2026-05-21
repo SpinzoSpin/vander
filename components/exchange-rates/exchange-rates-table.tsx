@@ -2,19 +2,19 @@
 
 import { type ColumnDef } from "@tanstack/react-table"
 
+import { deleteExchangeRateAction } from "@/app/dashboard/exchange-rates/actions"
 import { DataTable } from "@/components/data-table"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useSearchParams, useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { MoreHorizontalCircle01Icon } from "@hugeicons/core-free-icons"
-import { deleteExchangeRateAction } from "@/app/dashboard/exchange-rates/actions"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
 export interface ExchangeRate {
@@ -51,9 +51,8 @@ const columns: ColumnDef<ExchangeRate>[] = [
       const active = row.getValue("active") as boolean
       return (
         <span
-          className={`text-xs font-medium ${
-            active ? "text-[#83b047]" : "text-[#4e4e4e]"
-          }`}
+          className={`text-xs font-medium ${active ? "text-[#83b047]" : "text-[#4e4e4e]"
+            }`}
         >
           {active ? "Active" : "Inactive"}
         </span>
@@ -212,8 +211,6 @@ export function ExchangeRatesTable({
     },
     initialData,
   })
-
-  console.log({ data }, "Exchange rate table data: ")
 
   return (
     <DataTable

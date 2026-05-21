@@ -1,9 +1,14 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { signIn, auth } from "@/auth/auth"
 import { AuthError } from "next-auth"
 import { SignIn } from "../../components/auth/sign-in"
 
+export const metadata: Metadata = { title: "Sign In" }
+
 const SIGNIN_ERROR_URL = "/error"
+
+
 
 export default async function SignInPage(props: {
   searchParams: { callbackUrl: string | undefined }

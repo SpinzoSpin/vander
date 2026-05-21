@@ -446,13 +446,13 @@ export function DataTable<TData>({
       </div>}
 
       {/* ── Table ── */}
-      <div className="overflow-hidden rounded-lg border border-[#282828]">
+      <div className="overflow-hidden rounded-lg border border-border dark:border-[#282828]">
         <Table>
-          <TableHeader className="bg-[#1e1e1e]">
+          <TableHeader className="bg-muted/50 dark:bg-[#1e1e1e]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="border-[#282828] hover:bg-transparent"
+                className="border-border dark:border-[#282828] hover:bg-transparent"
               >
                 {headerGroup.headers.map((header) => {
                   const canSort = header.column.getCanSort()
@@ -465,7 +465,7 @@ export function DataTable<TData>({
                     <TableHead
                       key={header.id}
                       colSpan={header.colSpan}
-                      className="py-2 text-[11px] font-medium uppercase tracking-wide text-[#ededed]"
+                      className="py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground dark:text-[#ededed]"
                       onClick={
                         canSort
                           ? header.column.getToggleSortingHandler()
@@ -477,8 +477,8 @@ export function DataTable<TData>({
                         right: isPinned === 'right' ? `${header.column.getAfter('right')}px` : undefined,
                         position: isPinned ? 'sticky' : 'relative',
                         zIndex: isPinned ? 2 : 1,
-                        backgroundColor: isPinned ? '#1e1e1e' : undefined,
-                        boxShadow: isLastLeftPinned ? '1px 0 0 0 #282828' : isFirstRightPinned ? '-1px 0 0 0 #282828' : undefined,
+                        backgroundColor: isPinned ? 'var(--muted)' : undefined,
+                        boxShadow: isLastLeftPinned ? '1px 0 0 0 var(--border)' : isFirstRightPinned ? '-1px 0 0 0 var(--border)' : undefined,
                       }}
                     >
                       {header.isPlaceholder ? null : (
@@ -499,7 +499,7 @@ export function DataTable<TData>({
                               size={12}
                               strokeWidth={1.5}
                               className={
-                                sorted ? "text-[#ededed]" : "text-[#4e4e4e]"
+                                sorted ? "text-foreground dark:text-[#ededed]" : "text-muted-foreground/60 dark:text-[#4e4e4e]"
                               }
                             />
                           )}
@@ -518,7 +518,7 @@ export function DataTable<TData>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="group border-[#1e1e1e] text-[#ededed] transition-colors hover:bg-[#1a1a1a]"
+                  className="group border-border dark:border-[#1e1e1e] text-foreground dark:text-[#ededed] transition-colors hover:bg-muted/50 dark:hover:bg-[#1a1a1a]"
                 >
                   {row.getVisibleCells().map((cell) => {
                     const isPinned = cell.column.getIsPinned()
@@ -528,13 +528,13 @@ export function DataTable<TData>({
                     return (
                       <TableCell 
                         key={cell.id} 
-                        className={`py-3 ${isPinned ? "bg-background group-hover:bg-[#1a1a1a]" : ""}`}
+                        className={`py-3 ${isPinned ? "bg-background group-hover:bg-muted/50 dark:group-hover:bg-[#1a1a1a]" : ""}`}
                         style={{
                           left: isPinned === 'left' ? `${cell.column.getStart('left')}px` : undefined,
                           right: isPinned === 'right' ? `${cell.column.getAfter('right')}px` : undefined,
                           position: isPinned ? 'sticky' : 'relative',
                           zIndex: isPinned ? 1 : 0,
-                          boxShadow: isLastLeftPinned ? '1px 0 0 0 #1e1e1e' : isFirstRightPinned ? '-1px 0 0 0 #1e1e1e' : undefined,
+                          boxShadow: isLastLeftPinned ? '1px 0 0 0 var(--border)' : isFirstRightPinned ? '-1px 0 0 0 var(--border)' : undefined,
                         }}
                       >
                         {flexRender(

@@ -34,36 +34,36 @@ export function CreateTreasuryForm({ networks }: { networks: any[] }) {
   return (
     <form action={formAction} className="flex max-w-[600px] flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">
           Wallet Name
         </Label>
         <Input
           name="walletName"
           required
-          className="border-[#282828] bg-[#121212] text-[#ededed]"
+          className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]"
           placeholder="e.g. Main Operations"
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">
           Wallet Address
         </Label>
         <Input
           name="walletAddress"
           required
-          className="border-[#282828] bg-[#121212] text-[#ededed]"
+          className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]"
           placeholder="0x..."
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">Network</Label>
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">Network</Label>
         <Select name="networkId" required>
-          <SelectTrigger className="border-[#282828] bg-[#121212] text-[#ededed]">
+          <SelectTrigger className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]">
             <SelectValue placeholder="Select network" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background dark:bg-[#121212] border-border dark:border-[#1e1e1e] text-foreground dark:text-white">
             {networks.map((n) => (
               <SelectItem key={n.id} value={n.id.toString()}>
                 {n.name} ({n.symbol})
@@ -74,7 +74,7 @@ export function CreateTreasuryForm({ networks }: { networks: any[] }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">
           Initial Balance
         </Label>
         <Input
@@ -82,18 +82,18 @@ export function CreateTreasuryForm({ networks }: { networks: any[] }) {
           type="number"
           step="any"
           defaultValue="0"
-          className="border-[#282828] bg-[#121212] text-[#ededed]"
+          className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]"
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">
           Private Key (Optional)
         </Label>
         <Input
           name="privateKey"
           type="password"
-          className="border-[#282828] bg-[#121212] text-[#ededed]"
+          className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]"
         />
       </div>
 

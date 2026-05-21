@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 import { auth } from "@/auth/auth"
 import { redirect } from "next/navigation"
@@ -10,6 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Add01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { getUsers } from "@/services/users/get-users"
+
+export const metadata: Metadata = { title: "Users" }
 
 export default async function Page(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const session = await auth()
@@ -29,6 +32,7 @@ export default async function Page(props: { searchParams: Promise<{ [key: string
     id: u.id,
     email: u.email,
     role: u.role,
+    apiKey: u.apiKey ?? undefined,
     updatedAt: format(new Date(u.updatedAt), "MMM d, yyyy h:mm a"),
     createdAt: format(new Date(u.createdAt), "MMM d, yyyy h:mm a"),
   }))
@@ -39,7 +43,7 @@ export default async function Page(props: { searchParams: Promise<{ [key: string
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           {/* Header row */}
           <div className="flex items-center justify-between">
-            <p className="text-base font-semibold text-[#ededed]">Users List</p>
+            <p className="text-base font-semibold text-foreground dark:text-white">Users List</p>
             <div className="flex items-center gap-3">
               <Suspense>
                 <ActionsContainer

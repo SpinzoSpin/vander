@@ -1,7 +1,10 @@
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { CreateTreasuryForm } from "./create-form"
 
 export const dynamic = "force-dynamic"
+
+export const metadata: Metadata = { title: "Create Treasury" }
 
 export default async function CreateTreasuryPage() {
   let networks = await prisma.networks.findMany({
@@ -20,10 +23,10 @@ export default async function CreateTreasuryPage() {
   }))
 
   return (
-    <div className="flex flex-1 flex-col p-8 text-[#ededed]">
-      <div className="mb-8 border-b border-[#282828] pb-4">
+    <div className="flex flex-1 flex-col p-8 text-foreground dark:text-[#ededed]">
+      <div className="mb-8 border-b border-border dark:border-[#282828] pb-4">
         <h1 className="text-xl font-semibold">Create New Treasury</h1>
-        <p className="text-sm text-[#4e4e4e] mt-1">Add a new wallet to the Spinzopay ecosystem.</p>
+        <p className="text-sm text-muted-foreground dark:text-[#4e4e4e] mt-1">Add a new wallet to the Spinzopay ecosystem.</p>
       </div>
       <CreateTreasuryForm networks={serializedNetworks} />
     </div>

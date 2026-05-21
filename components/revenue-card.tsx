@@ -34,14 +34,14 @@ export function RevenueCard({
     <div
       className={cn(
         "flex h-full flex-col justify-between overflow-hidden rounded-lg border p-3",
-        // Match Figma: bg #181818, border #2e2e2e
-        "border-[#2e2e2e] bg-[#181818]",
+        // Match Figma in dark mode, standard card in light mode
+        "border-border dark:border-[#2e2e2e] bg-card dark:bg-[#181818]",
         className
       )}
     >
       {/* Header */}
       <div className="flex w-full items-center justify-between">
-        <p className="text-base leading-normal font-semibold tracking-wide whitespace-nowrap text-[#ededed]">
+        <p className="text-base leading-normal font-semibold tracking-wide whitespace-nowrap text-foreground dark:text-[#ededed]">
           {title}
         </p>
 
@@ -54,8 +54,8 @@ export function RevenueCard({
                   className={cn(
                     "flex cursor-help items-center gap-1 rounded border px-2 py-1.5 text-xs font-medium whitespace-nowrap",
                     isPositive
-                      ? "border-[#090f01] bg-[rgba(131,176,71,0.04)] text-[#83b047]"
-                      : "border-[#3e1c1c] bg-[rgba(255,80,80,0.04)] text-[#E38752]"
+                      ? "border-green-200 bg-green-50/50 text-green-600 dark:border-[#090f01] dark:bg-[rgba(131,176,71,0.04)] dark:text-[#83b047]"
+                      : "border-orange-200 bg-orange-50/50 text-orange-600 dark:border-[#3e1c1c] dark:bg-[rgba(255,80,80,0.04)] dark:text-[#E38752]"
                   )}
                 >
                   {/* Up/Down arrow icon */}
@@ -70,7 +70,12 @@ export function RevenueCard({
                   <span>{percentageChange}</span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={6} className="bg-[#1e1e1e] text-[#ededed] border border-[#2e2e2e]" style={{ "--tooltip-bg": "#1e1e1e" } as React.CSSProperties}>
+              <TooltipContent
+                side="bottom"
+                sideOffset={6}
+                className="border border-border bg-popover text-popover-foreground dark:border-[#2e2e2e] dark:bg-[#1e1e1e] dark:text-[#ededed]"
+                style={{ "--tooltip-bg": "var(--popover)" } as React.CSSProperties}
+              >
                 {percentageChange === "100.00%"
                   ? "No data from last month"
                   : "Compared to last 30 days"}
@@ -84,7 +89,7 @@ export function RevenueCard({
       <div className="mt-6 flex w-full flex-col gap-3 pr-2">
         {/* Amount row */}
         <div className="flex w-full items-center justify-between">
-          <p className="text-[28px] leading-normal font-semibold whitespace-nowrap text-[#ededed]">
+          <p className="text-[28px] leading-normal font-semibold whitespace-nowrap text-foreground dark:text-[#ededed]">
             {amount}
           </p>
           {/* USDT icon */}
@@ -102,7 +107,7 @@ export function RevenueCard({
 
         {/* Description */}
         {description && (
-          <p className="text-sm leading-normal font-medium whitespace-nowrap text-[#4e4e4e]">
+          <p className="text-sm leading-normal font-medium whitespace-nowrap text-muted-foreground dark:text-[#4e4e4e]">
             {description}
           </p>
         )}

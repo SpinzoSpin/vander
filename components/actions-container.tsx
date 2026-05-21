@@ -105,15 +105,15 @@ export function ActionsContainer({
       <label
         className={cn(
           "flex w-60 items-center gap-2 rounded-lg border px-3 py-2",
-          "border-[#282828] bg-[#1e1e1e]",
-          "cursor-text transition-colors focus-within:border-[#3e3e3e]"
+          "border-border dark:border-[#282828] bg-background dark:bg-[#1e1e1e]",
+          "cursor-text transition-colors focus-within:border-muted-foreground/30 dark:focus-within:border-[#3e3e3e]"
         )}
       >
         <HugeiconsIcon
           icon={Search01Icon}
           size={16}
           strokeWidth={1.5}
-          className="shrink-0 text-[#4e4e4e]"
+          className="shrink-0 text-muted-foreground dark:text-[#4e4e4e]"
         />
         <input
           id="actions-search"
@@ -122,8 +122,8 @@ export function ActionsContainer({
           value={inputValue}
           onChange={handleSearch}
           className={cn(
-            "min-w-0 flex-1 bg-transparent text-xs font-normal text-[#4e4e4e]",
-            "outline-none placeholder:text-[#4e4e4e]"
+            "min-w-0 flex-1 bg-transparent text-xs font-normal text-foreground dark:text-[#ededed]",
+            "outline-none placeholder:text-muted-foreground/50 dark:placeholder:text-[#4e4e4e]"
           )}
         />
       </label>
@@ -135,9 +135,9 @@ export function ActionsContainer({
         onClick={handleFilter}
         className={cn(
           "flex shrink-0 items-center gap-1 rounded-lg border px-2 py-2 text-xs font-medium",
-          "border-[#282828] bg-[#1e1e1e] text-[#ededed]",
+          "border-border dark:border-[#282828] bg-card dark:bg-[#1e1e1e] text-foreground dark:text-[#ededed]",
           "shadow-[inset_-2px_-2px_4px_0px_rgba(18,18,18,0.25)]",
-          "transition-colors hover:border-[#3e3e3e] hover:bg-[#242424]",
+          "transition-colors hover:border-muted-foreground/30 dark:hover:border-[#3e3e3e] hover:bg-muted/50 dark:hover:bg-[#242424]",
           filterActive && "border-[#83b047]/40 bg-[rgba(131,176,71,0.06)]"
         )}
         aria-pressed={filterActive}
@@ -146,7 +146,7 @@ export function ActionsContainer({
           icon={FilterIcon}
           size={16}
           strokeWidth={1.5}
-          className={filterActive ? "text-[#83b047]" : "text-[#ededed]"}
+          className={filterActive ? "text-[#83b047]" : "text-muted-foreground dark:text-[#ededed]"}
         />
         <span className={filterActive ? "text-[#83b047]" : ""}>Filter</span>
       </button>
@@ -159,9 +159,9 @@ export function ActionsContainer({
             type="button"
             className={cn(
               "flex shrink-0 items-center gap-1 rounded-lg border px-2 py-2 text-xs font-medium",
-              "border-[#282828] bg-[#1e1e1e] text-[#ededed]",
+              "border-border dark:border-[#282828] bg-card dark:bg-[#1e1e1e] text-foreground dark:text-[#ededed]",
               "shadow-[inset_-2px_-2px_4px_0px_rgba(18,18,18,0.25)]",
-              "transition-colors hover:border-[#3e3e3e] hover:bg-[#242424]"
+              "transition-colors hover:border-muted-foreground/30 dark:hover:border-[#3e3e3e] hover:bg-muted/50 dark:hover:bg-[#242424]"
             )}
             aria-label={`Currency: ${currentCurrency}`}
           >
@@ -170,7 +170,7 @@ export function ActionsContainer({
               icon={ArrowDown01Icon}
               size={16}
               strokeWidth={1.5}
-              className="shrink-0 text-[#ededed]"
+              className="shrink-0 text-muted-foreground dark:text-[#ededed]"
             />
           </button>
         </DropdownMenuTrigger>

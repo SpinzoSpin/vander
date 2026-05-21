@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 import { auth } from "@/auth/auth"
 import { redirect } from "next/navigation"
@@ -10,6 +11,8 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { getNetworks } from "@/services/networks/get-network"
 import { ClientNetworksList } from "./client-networks-list"
+
+export const metadata: Metadata = { title: "Networks" }
 
 export default async function Page({
   searchParams,
@@ -41,7 +44,7 @@ export default async function Page({
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           {/* Header row */}
           <div className="flex items-center justify-between">
-            <p className="text-base font-semibold text-[#ededed]">
+            <p className="text-base font-semibold text-foreground dark:text-white">
               Available Chain Networks
             </p>
             <div className="flex items-center gap-3">

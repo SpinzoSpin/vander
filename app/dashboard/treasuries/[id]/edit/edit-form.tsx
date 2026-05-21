@@ -42,38 +42,38 @@ export function EditTreasuryForm({
       <input type="hidden" name="id" value={treasury.id} />
 
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">
           Wallet Name
         </Label>
         <Input
           name="walletName"
           defaultValue={treasury.walletName}
           required
-          className="border-[#282828] bg-[#121212] text-[#ededed]"
+          className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]"
           placeholder="e.g. Main Operations"
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">
           Wallet Address
         </Label>
         <Input
           name="walletAddress"
           defaultValue={treasury.walletAddress}
           required
-          className="border-[#282828] bg-[#121212] text-[#ededed]"
+          className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]"
           placeholder="0x..."
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">Network</Label>
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">Network</Label>
         <Select name="networkId" defaultValue={treasury.networkId.toString()} required>
-          <SelectTrigger className="border-[#282828] bg-[#121212] text-[#ededed]">
+          <SelectTrigger className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]">
             <SelectValue placeholder="Select network" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background dark:bg-[#121212] border-border dark:border-[#1e1e1e] text-foreground dark:text-white">
             {networks.map((n) => (
               <SelectItem key={n.id} value={n.id.toString()}>
                 {n.name} ({n.symbol})
@@ -84,7 +84,7 @@ export function EditTreasuryForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">
           Initial Balance
         </Label>
         <Input
@@ -92,19 +92,19 @@ export function EditTreasuryForm({
           type="number"
           step="any"
           defaultValue={treasury.currentBalance}
-          className="border-[#282828] bg-[#121212] text-[#ededed]"
+          className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]"
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium text-[#ededed]">
+        <Label className="text-sm font-medium text-foreground dark:text-[#ededed]">
           Private Key (Optional)
         </Label>
         <Input
           name="privateKey"
           type="password"
           defaultValue={treasury.privateKey}
-          className="border-[#282828] bg-[#121212] text-[#ededed]"
+          className="border-border dark:border-[#282828] bg-background dark:bg-[#121212] text-foreground dark:text-[#ededed]"
         />
       </div>
 

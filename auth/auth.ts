@@ -1,10 +1,10 @@
-import NextAuth from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
-import Credentials from "next-auth/providers/credentials"
-import type { Provider } from "next-auth/providers"
-import { getUser } from "@/services/users/get-user"
 import { signInSchema } from "@/lib/validations/zod"
+import { getUser } from "@/services/users/get-user"
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import NextAuth from "next-auth"
+import type { Provider } from "next-auth/providers"
+import Credentials from "next-auth/providers/credentials"
 import { authConfig } from "./auth.config"
 
 const providers: Provider[] = [
@@ -48,6 +48,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     providers: providers,
     session: {
         strategy: "jwt",
-    },
-    debug: true,
+    }
 })

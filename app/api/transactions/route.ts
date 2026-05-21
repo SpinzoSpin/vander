@@ -37,7 +37,7 @@ export const GET = withErrorHandler(async (req) => {
                 ? t.php_to_usdt_rate_snapshot || 0
                 : t.usdt_to_php_rate_snapshot || 0
         )
-        const refRate = Number(
+        const rawRefRate = Number(
             t.reference_rate_snapshot ||
             (isFiatToCrypto
                 ? t.exchange_rate?.php_to_usdt_reference_rate
@@ -54,13 +54,29 @@ export const GET = withErrorHandler(async (req) => {
                 ? t.exchange_rate?.php_to_usdt_gic_fee
                 : t.exchange_rate?.usdt_to_php_gic_fee
         ) || 0
+
+        let refRate = rawRefRate
+        if (role === "gic" && t.exchange_rate) {
+            if (isFiatToCrypto) {
+                const usdtToPhpRef = Number(
+                    t.usdt_to_php_reference_rate_snapshot ||
+                    t.exchange_rate.usdt_to_php_reference_rate ||
+                    (rawRefRate > 0 ? 1 / rawRefRate : 1)
+                )
+                const spinzoRate = spinzoFee / (usdtToPhpRef * usdtToPhpRef)
+                refRate = rawRefRate - spinzoRate
+            } else {
+                refRate = rawRefRate - spinzoFee
+            }
+        }
+
         const fallbackAppliedRate = Number(
             isFiatToCrypto
                 ? t.exchange_rate?.php_to_usdt_rate
                 : t.exchange_rate?.usdt_to_php_rate
         ) || 0
         const markupRate = appliedRateFromSnapshot || appliedRateFromRateSnapshot || fallbackAppliedRate ||
-            (refRate > 0 ? refRate - spinzoFee - gicFee : 0)
+            (rawRefRate > 0 ? rawRefRate - spinzoFee - gicFee : 0)
         const markupExchangeRate = markupRate > 0
             ? (isFiatToCrypto
                 ? `1 PHP = ${markupRate} USDT`

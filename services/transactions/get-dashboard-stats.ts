@@ -204,7 +204,7 @@ export async function getDashboardStats(role: string): Promise<{
   const profitChange = computePercentageChange(currentProfit, previousProfit)
 
   // Label the profit card based on role
-  const profitLabel = role === "gic" ? "GIC PROFIT" : "SPINZO PROFIT"
+  const profitLabel = role === "gic" ? "PROFIT" : "SPINZO PROFIT"
 
   // ── Transaction counts ──
   const currentCount = currentPeriod.length

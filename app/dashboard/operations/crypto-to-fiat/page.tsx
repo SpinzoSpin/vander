@@ -43,19 +43,22 @@ export default async function Page(props: {
       t.applied_rate_snapshot || t.rate_snapshot || 0
     )
     const appliedRateFromRateSnapshot = Number(t.usdt_to_php_rate_snapshot || 0)
-    const referenceRate = Number(
+    const rawReferenceRate = Number(
       t.reference_rate_snapshot || t.exchange_rate?.usdt_to_php_reference_rate || 0
     )
     const spinzoFee = Number(t.exchange_rate?.usdt_to_php_spinzo_fee) || 0
     const gicFee = Number(t.exchange_rate?.usdt_to_php_gic_fee) || 0
+
+    const referenceRate = safeRole === "gic" && t.exchange_rate
+      ? rawReferenceRate - spinzoFee
+      : rawReferenceRate
+
     const fallbackAppliedRate = Number(t.exchange_rate?.usdt_to_php_rate) || 0
     const markupRate = appliedRateFromSnapshot || appliedRateFromRateSnapshot || fallbackAppliedRate ||
-      (referenceRate > 0 ? referenceRate - spinzoFee - gicFee : 0)
+      (rawReferenceRate > 0 ? rawReferenceRate - spinzoFee - gicFee : 0)
     const markupExchangeRate = markupRate > 0
       ? `1 USDT = ${markupRate} PHP`
       : "-"
-
-
 
     const amountPhp = typeof t.amount_php?.toNumber === "function"
       ? t.amount_php.toNumber()

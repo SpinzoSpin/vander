@@ -331,7 +331,16 @@ function getColumns(role?: string): ColumnDef<OnrampTransaction>[] {
       ...(role === "lotto" ? ["gicProfit", "markupExchangeRate"] : [])
     ];
     return baseColumns
-      .map(c => ((c as any).accessorKey === "status" ? statusColumn : c))
+      .map(c => {
+        if ((c as any).accessorKey === "status") return statusColumn;
+        if ((c as any).accessorKey === "gicProfit" && role === "gic") {
+          return {
+            ...c,
+            header: "PROFIT ( USDT )",
+          };
+        }
+        return c;
+      })
       .filter(c => {
         const key = (c as any).accessorKey || c.id;
         return !hiddenKeys.includes(key);

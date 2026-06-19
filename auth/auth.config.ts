@@ -24,6 +24,11 @@ export const authConfig = {
 
             const hasApiKey = headers.get('Authorization')?.startsWith('users API-Key ');
 
+            console.log("Path:", nextUrl.pathname);
+            console.log("Is API Key Route:", isApiKeyRoute);
+            console.log("Auth Header:", headers.get('Authorization'));
+            console.log("Has API Key:", hasApiKey);
+
             if (isApiRoute) {
                 if (isApiKeyRoute && hasApiKey) {
                     return true; // Bypass NextAuth, allow route handler to validate API Key

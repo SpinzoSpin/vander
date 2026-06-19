@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma"
+import { fetchOnchainBalance } from "@/lib/onchain-balance"
+import { Prisma } from "@/generated/prisma/client"
 
 export async function getTreasuries(params?: {
   q?: string;
@@ -7,10 +9,8 @@ export async function getTreasuries(params?: {
 }) {
   const where: any = {}
 
-  // "filter" or "currency" might not map perfectly to treasuries yet, 
-  // but we can support network filtering if needed
   if (params?.currency) {
-      where.networks = {
+      where.network = {
         symbol: params.currency
       }
   }
@@ -32,5 +32,38 @@ export async function getTreasuries(params?: {
     },
   })
 
-  return treasuries
+  // Dynamically fetch balance from on-chain and update the DB/memory
+  const updatedTreasuries = await Promise.all(
+    treasuries.map(async (t) => {
+      if (!t.network.rpc_url || !t.network.usdt_contract_address) {
+        return t;
+      }
+
+      const onchainBalance = await fetchOnchainBalance({
+        rpcUrl: t.network.rpc_url,
+        walletAddress: t.wallet_address,
+        usdtContractAddress: t.network.usdt_contract_address,
+        usdtDecimals: Number(t.network.usdt_decimals),
+        networkSymbol: t.network.symbol,
+        networkCategory: t.network.network_category,
+        networkName: t.network.name,
+      });
+
+      if (onchainBalance !== null) {
+        try {
+          await prisma.treasury.update({
+            where: { id: t.id },
+            data: { current_balance: onchainBalance },
+          });
+          t.current_balance = new Prisma.Decimal(onchainBalance);
+        } catch (dbError) {
+          console.error(`Failed to update database balance for treasury ${t.id}:`, dbError);
+        }
+      }
+
+      return t;
+    })
+  );
+
+  return updatedTreasuries;
 }

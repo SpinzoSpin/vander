@@ -119,6 +119,9 @@ async function main() {
     console.log(`  ✅ Created "${network.name}" (symbol: ${network.symbol})`)
   }
 
+  const crypto = await import("crypto")
+  const bcrypt = await import("bcrypt")
+
   console.log("🌱 Seeding admin user...")
   const adminEmail = "admin@spinzopay.com"
   const existingUser = await prisma.user.findUnique({
@@ -128,9 +131,8 @@ async function main() {
   if (existingUser) {
     console.log(`  ⏭️  Skipping user "${adminEmail}" — already exists`)
   } else {
-    // We import bcrypt dynamically to avoid issues if it's not needed by other scripts
-    const bcrypt = await import("bcrypt")
-    const hashedPassword = await bcrypt.hash("password123", 10)
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD || crypto.randomBytes(16).toString("hex")
+    const hashedPassword = await bcrypt.hash(adminPassword, 10)
     
     await prisma.user.create({
       data: {
@@ -140,7 +142,7 @@ async function main() {
         role: "admin",
       }
     })
-    console.log(`  ✅ Created user "${adminEmail}" (password: password123)`)
+    console.log(`  ✅ Created user "${adminEmail}" (password: ${process.env.SEED_ADMIN_PASSWORD ? "********" : adminPassword})`)
   }
 
   console.log("🌱 Seeding lotto user...")
@@ -152,8 +154,8 @@ async function main() {
   if (existingLotto) {
     console.log(`  ⏭️  Skipping user "${lottoEmail}" — already exists`)
   } else {
-    const bcrypt = await import("bcrypt")
-    const hashedPassword = await bcrypt.hash("admin123", 10)
+    const lottoPassword = process.env.SEED_LOTTO_PASSWORD || crypto.randomBytes(16).toString("hex")
+    const hashedPassword = await bcrypt.hash(lottoPassword, 10)
     
     await prisma.user.create({
       data: {
@@ -163,7 +165,7 @@ async function main() {
         role: "lotto",
       }
     })
-    console.log(`  ✅ Created user "${lottoEmail}" (password: admin123)`)
+    console.log(`  ✅ Created user "${lottoEmail}" (password: ${process.env.SEED_LOTTO_PASSWORD ? "********" : lottoPassword})`)
   }
 
   console.log("🌱 Seeding gic user...")
@@ -175,8 +177,8 @@ async function main() {
   if (existingGic) {
     console.log(`  ⏭️  Skipping user "${gicEmail}" — already exists`)
   } else {
-    const bcrypt = await import("bcrypt")
-    const hashedPassword = await bcrypt.hash("admin123", 10)
+    const gicPassword = process.env.SEED_GIC_PASSWORD || crypto.randomBytes(16).toString("hex")
+    const hashedPassword = await bcrypt.hash(gicPassword, 10)
     
     await prisma.user.create({
       data: {
@@ -186,7 +188,7 @@ async function main() {
         role: "gic",
       }
     })
-    console.log(`  ✅ Created user "${gicEmail}" (password: admin123)`)
+    console.log(`  ✅ Created user "${gicEmail}" (password: ${process.env.SEED_GIC_PASSWORD ? "********" : gicPassword})`)
   }
 
   console.log("🌱 Seeding default exchange rate...")

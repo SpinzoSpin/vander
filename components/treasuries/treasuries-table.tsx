@@ -11,6 +11,8 @@ import { MoreHorizontalCircle01Icon } from "@hugeicons/core-free-icons"
 import { deleteTreasuryAction } from "@/app/dashboard/treasuries/actions"
 import { toast } from "sonner"
 
+import { TokenIcon, NetworkIcon } from "@web3icons/react/dynamic"
+
 export interface Treasury {
   id: string
   walletName: string
@@ -22,6 +24,20 @@ export interface Treasury {
 
 interface TreasuriesTableProps {
   data: Treasury[]
+}
+
+const mapNetworkToWeb3IconKey = (name: string): string => {
+  const normalized = name.toLowerCase();
+  if (normalized.includes("solana")) return "solana";
+  if (normalized.includes("avalanche") || normalized.includes("avax")) return "avalanche";
+  if (normalized.includes("optimism") || normalized.includes("op")) return "optimism";
+  if (normalized.includes("arbitrum") || normalized.includes("arb")) return "arbitrum";
+  if (normalized.includes("tron") || normalized.includes("trc")) return "tron";
+  if (normalized.includes("polygon") || normalized.includes("matic")) return "polygon";
+  if (normalized.includes("binance") || normalized.includes("bsc") || normalized.includes("bep")) return "binance-smart-chain";
+  if (normalized.includes("base")) return "base";
+  if (normalized.includes("ethereum") || normalized.includes("eth")) return "ethereum";
+  return normalized;
 }
 
 const columns: ColumnDef<Treasury>[] = [
@@ -57,7 +73,19 @@ const columns: ColumnDef<Treasury>[] = [
     header: "CURRENT BALANCE",
     cell: ({ row }) => {
       const amount = row.getValue("currentBalance") as string
-      return <span className="text-xs font-medium text-[#ededed]">{amount}</span>
+      const networkName = row.original.network
+      const networkKey = mapNetworkToWeb3IconKey(networkName)
+      return (
+        <div className="flex items-center gap-4">
+          <span className="text-xs font-medium text-[#ededed]">
+            {Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+          <div className="flex flex-col items-center gap-1">
+            <TokenIcon symbol="USDT" variant="branded" size={16} className="shrink-0" />
+            <NetworkIcon name={networkKey} variant="branded" size={12} className="shrink-0" />
+          </div>
+        </div>
+      )
     },
   },
   {

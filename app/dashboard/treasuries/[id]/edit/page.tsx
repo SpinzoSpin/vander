@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { EditTreasuryForm } from "./edit-form"
+import { auth } from "@/auth/auth"
 
 export const metadata: Metadata = { title: "Edit Treasury" }
 
@@ -10,6 +11,13 @@ export default async function EditTreasuryPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const session = await auth()
+  const role = (session?.user as any)?.role?.toLowerCase()
+
+  if (role === "gic" || role === "lotto") {
+    redirect("/dashboard/operations/fiat-to-crypto")
+  }
+
   const resolvedParams = await params
   const treasuryId = parseInt(resolvedParams.id, 10)
 

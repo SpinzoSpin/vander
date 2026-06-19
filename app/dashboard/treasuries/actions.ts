@@ -4,9 +4,19 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { logger } from "@/lib/logger"
 import * as z from "zod"
+import { auth } from "@/auth/auth"
 
 export async function deleteTreasuryAction(id: string) {
   try {
+    const session = await auth()
+    if (!session || !session.user) {
+      return { success: false, message: "Unauthorized" }
+    }
+    const role = (session.user as any).role?.toLowerCase()
+    if (role !== "admin") {
+      return { success: false, message: "Forbidden: Admins only" }
+    }
+
     const treasuryId = parseInt(id, 10)
 
     await prisma.treasury.delete({
@@ -34,6 +44,15 @@ const editTreasurySchema = z.object({
 
 export async function editTreasuryAction(prevState: any, formData: FormData) {
   try {
+    const session = await auth()
+    if (!session || !session.user) {
+      return { success: false, message: "Unauthorized" }
+    }
+    const role = (session.user as any).role?.toLowerCase()
+    if (role !== "admin") {
+      return { success: false, message: "Forbidden: Admins only" }
+    }
+
     const data = {
       id: formData.get("id"),
       walletName: formData.get("walletName"),

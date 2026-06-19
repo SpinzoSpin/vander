@@ -1,12 +1,12 @@
-import type { Metadata } from "next"
 import { isAfter, subDays } from "date-fns"
+import type { Metadata } from "next"
 import { Suspense } from "react"
 
 import { auth } from "@/auth/auth"
 import { ActionsContainer } from "@/components/actions-container"
 import {
-    OnrampTable,
-    type OnrampTransaction,
+  OnrampTable,
+  type OnrampTransaction,
 } from "@/components/operations/onramp-table"
 import { OperationStatsCard } from "@/components/operations/stats-ops-card"
 import { getTransactions } from "@/services/transactions/get-transactions"
@@ -20,8 +20,6 @@ export default async function Page(props: {
   const session = await auth()
   const user = session?.user
   const role = (user as any)?.role?.toLowerCase()
-
-  console.log({ session, user, role })
 
   const searchParams = await props.searchParams
   const q = typeof searchParams.q === "string" ? searchParams.q : undefined

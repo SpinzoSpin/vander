@@ -35,6 +35,18 @@ export const POST = withErrorHandler(async (req: NextRequest, props: { params: P
         return badRequest("No file uploaded")
     }
 
+    // Validate file size (e.g., max 10MB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+        return badRequest("File size exceeds the 10MB limit")
+    }
+
+    // Validate MIME type
+    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"]
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+        return badRequest("Invalid file type. Only JPEG, PNG, WebP images and PDF documents are allowed.")
+    }
+
     // 1. Convert file object to buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)

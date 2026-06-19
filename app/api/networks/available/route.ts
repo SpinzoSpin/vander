@@ -6,6 +6,14 @@ import { CreateNetworkSchema, GetNetworkParamsSchema } from "@/services/networks
 import { getNetworks } from "@/services/networks/get-network";
 
 export const POST = withErrorHandler(async (req) => {
+    const authResult = await authenticateApiRequest(req)
+    if (!authResult.authorized) return unauthorized("Requires authentication")
+
+    const role = (authResult.user as any)?.role?.toLowerCase()
+    if (role !== "admin") {
+        return unauthorized("Only admins can create networks")
+    }
+
     const payload = await req.json();
     const validate = await CreateNetworkSchema.safeParseAsync(payload)
     if (!validate.success) throw new BadRequestError("Failed to validate request")

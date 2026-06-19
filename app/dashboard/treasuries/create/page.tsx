@@ -1,12 +1,21 @@
 import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { CreateTreasuryForm } from "./create-form"
+import { auth } from "@/auth/auth"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = { title: "Create Treasury" }
 
 export default async function CreateTreasuryPage() {
+  const session = await auth()
+  const role = (session?.user as any)?.role?.toLowerCase()
+
+  if (role === "gic" || role === "lotto") {
+    redirect("/dashboard/operations/fiat-to-crypto")
+  }
+
   let networks = await prisma.networks.findMany({
     where: { is_active: true }
   })

@@ -4,9 +4,19 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { logger } from "@/lib/logger"
 import * as z from "zod"
+import { auth } from "@/auth/auth"
 
 export async function deleteExchangeRateAction(id: string) {
   try {
+    const session = await auth()
+    if (!session || !session.user) {
+      return { success: false, message: "Unauthorized" }
+    }
+    const role = (session.user as any).role?.toLowerCase()
+    if (role !== "admin") {
+      return { success: false, message: "Forbidden: Admins only" }
+    }
+
     const rateId = parseInt(id, 10)
 
     await prisma.exchange_rates.delete({
@@ -46,6 +56,15 @@ const editExchangeRateSchema = z.object({
 
 export async function editExchangeRateAction(prevState: any, formData: FormData) {
   try {
+    const session = await auth()
+    if (!session || !session.user) {
+      return { success: false, message: "Unauthorized" }
+    }
+    const role = (session.user as any).role?.toLowerCase()
+    if (role !== "admin") {
+      return { success: false, message: "Forbidden: Admins only" }
+    }
+
     const data = {
       id: formData.get("id"),
       usdtToPhpReferenceRate: formData.get("usdtToPhpReferenceRate"),
@@ -103,6 +122,15 @@ export async function editExchangeRateAction(prevState: any, formData: FormData)
 
 export async function getLiveReferenceRatesAction() {
   try {
+    const session = await auth()
+    if (!session || !session.user) {
+      return { success: false, message: "Unauthorized" }
+    }
+    const role = (session.user as any).role?.toLowerCase()
+    if (role !== "admin") {
+      return { success: false, message: "Forbidden: Admins only" }
+    }
+
     const { getPhpToUsdRate } = await import("@/services/exchange-rates/create-rate")
     const phpToUsdtReferenceRate = await getPhpToUsdRate()
     const usdtToPhpReferenceRate = Math.round((1 / phpToUsdtReferenceRate) * 1000000) / 1000000

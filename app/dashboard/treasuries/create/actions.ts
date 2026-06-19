@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { logger } from "@/lib/logger"
+import { auth } from "@/auth/auth"
 
 const createTreasurySchema = z.object({
   walletName: z.string().min(1, "Wallet name is required"),
@@ -15,6 +16,15 @@ const createTreasurySchema = z.object({
 
 export async function createTreasuryAction(prevState: any, formData: FormData) {
   try {
+    const session = await auth()
+    if (!session || !session.user) {
+      return { success: false, message: "Unauthorized" }
+    }
+    const role = (session.user as any).role?.toLowerCase()
+    if (role !== "admin") {
+      return { success: false, message: "Forbidden: Admins only" }
+    }
+
     const data = {
       walletName: formData.get("walletName"),
       walletAddress: formData.get("walletAddress"),

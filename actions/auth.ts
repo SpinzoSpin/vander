@@ -12,6 +12,11 @@ const registerSchema = z.object({
 
 export async function registerAction(formData: FormData) {
   try {
+    const userCount = await prisma.user.count();
+    if (userCount > 0) {
+      return { error: "Registration is disabled. Only the system administrator can add users." };
+    }
+
     const data = Object.fromEntries(formData.entries());
     const { email, password } = registerSchema.parse(data);
 

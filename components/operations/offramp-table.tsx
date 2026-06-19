@@ -178,8 +178,6 @@ const baseColumns: ColumnDef<OfframpTransaction>[] = [
     accessorKey: "exchangeRate",
     header: "REFERENCE RATE",
     cell: ({ row }) => {
-
-      console.log("ROW DATA", row.original)
       const role = (row as any).table?.options?.meta?.role
       const value = role === "lotto"
         ? row.original.markupExchangeRate
@@ -367,9 +365,6 @@ function OfframpActionCell({ row }: { row: any }) {
       setLoading(null)
     }
   }
-
-  console.log("DATA SESSION", session)
-  console.log("ROLE: ", role)
 
   if (role === "gic") {
     return null; // GIC is strictly read-only

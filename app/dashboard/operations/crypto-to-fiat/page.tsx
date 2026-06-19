@@ -1,6 +1,6 @@
-import type { Metadata } from "next"
 import { auth } from "@/auth/auth"
 import { isAfter, subDays } from "date-fns"
+import type { Metadata } from "next"
 import { Suspense } from "react"
 
 import { ActionsContainer } from "@/components/actions-container"
@@ -155,8 +155,6 @@ export default async function Page(props: {
     (acc, t) => acc + Number(t.amount_php || 0),
     0
   )
-
-  console.log("MAPPING: ", { mappedData })
 
   const stats = {
     totalTransactions,

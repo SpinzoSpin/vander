@@ -133,6 +133,13 @@ export async function createExchangeTransaction({
         }
     })
 
+    // Trigger Telegram notification in the background
+    import("@/services/telegram/bot").then(({ sendTelegramNotification }) => {
+        sendTelegramNotification(transaction.id);
+    }).catch(err => {
+        console.error("Failed to load Telegram bot:", err);
+    });
+
     // 7. API Response Construction
     return {
         success: true,

@@ -2,27 +2,26 @@ import { prisma } from "@/lib/prisma"
 import { GIC_MARKUP_RATE, SPINZO_MARKUP_RATE } from "@/constants"
 import { ApiError } from "@/lib/api-response"
 
-const API_URL = process.env.EXCHANGE_RATE_API_URL || 'https://v6.exchangerate-api.com/v6'
-const API_KEY = process.env.EXCHANGE_RATE_API_KEY
-
 export async function getPhpToUsdRate(): Promise<number> {
-    if (!API_KEY) {
-        throw new ApiError('EXCHANGE_RATE_API_KEY is not configured in environment variables', 500)
-    }
-
-    const url = `${API_URL}/${API_KEY}/pair/PHP/USD`
+    const url = 'https://api.pro.coins.ph/openapi/quote/v1/ticker/price?symbol=USDTPHP'
 
     const response = await fetch(url)
     if (!response.ok) {
-        throw new ApiError(`Exchange rate API error: ${response.status} ${response.statusText}`, 502)
+        throw new ApiError(`Coins.ph API error: ${response.status} ${response.statusText}`, 502)
     }
 
     const data = await response.json()
-    if (data.result !== 'success') {
-        throw new ApiError(`Exchange rate API error: ${data['error-type'] || 'Unknown error'}`, 502)
+    if (!data || typeof data.price !== 'string') {
+        throw new ApiError(`Invalid response format from Coins.ph API`, 502)
     }
 
-    return data.conversion_rate
+    const usdtToPhpRate = Number(data.price)
+    if (isNaN(usdtToPhpRate) || usdtToPhpRate <= 0) {
+        throw new ApiError(`Invalid price value from Coins.ph API: ${data.price}`, 502)
+    }
+
+    // Convert 1 USDT / PHP rate to 1 PHP / USDT rate
+    return 1 / usdtToPhpRate
 }
 
 const roundToSixDecimals = (value: number) => Math.round(value * 1000000) / 1000000
@@ -45,33 +44,36 @@ export interface ManualRates {
 }
 
 export async function createExchangeRate(manualRates?: ManualRates) {
+    const existingRate = await prisma.exchange_rates.findFirst()
+
     if (manualRates) {
-        if (manualRates.isActive) {
-            await prisma.exchange_rates.updateMany({
-                where: { is_active: true },
-                data: { is_active: false }
-            })
+        const rateData = {
+            pair: "USDT/PHP",
+            usdt_to_php_reference_rate: manualRates.usdtToPhpReferenceRate,
+            usdt_to_php_rate: manualRates.usdtToPhpRate,
+            usdt_to_php_spread: manualRates.usdtToPhpSpread,
+            usdt_to_php_spread_percentage: manualRates.usdtToPhpSpreadPercentage,
+            php_to_usdt_reference_rate: manualRates.phpToUsdtReferenceRate,
+            php_to_usdt_rate: manualRates.phpToUsdtRate,
+            php_to_usdt_spread: manualRates.phpToUsdtSpread,
+            php_to_usdt_spread_percentage: manualRates.phpToUsdtSpreadPercentage,
+            usdt_to_php_spinzo_fee: manualRates.usdtToPhpSpinzoFee,
+            usdt_to_php_gic_fee: manualRates.usdtToPhpGicFee,
+            php_to_usdt_spinzo_fee: manualRates.phpToUsdtSpinzoFee,
+            php_to_usdt_gic_fee: manualRates.phpToUsdtGicFee,
+            is_active: manualRates.isActive
         }
 
-        const newRate = await prisma.exchange_rates.create({
-            data: {
-                pair: "USDT/PHP",
-                usdt_to_php_reference_rate: manualRates.usdtToPhpReferenceRate,
-                usdt_to_php_rate: manualRates.usdtToPhpRate,
-                usdt_to_php_spread: manualRates.usdtToPhpSpread,
-                usdt_to_php_spread_percentage: manualRates.usdtToPhpSpreadPercentage,
-                php_to_usdt_reference_rate: manualRates.phpToUsdtReferenceRate,
-                php_to_usdt_rate: manualRates.phpToUsdtRate,
-                php_to_usdt_spread: manualRates.phpToUsdtSpread,
-                php_to_usdt_spread_percentage: manualRates.phpToUsdtSpreadPercentage,
-                usdt_to_php_spinzo_fee: manualRates.usdtToPhpSpinzoFee,
-                usdt_to_php_gic_fee: manualRates.usdtToPhpGicFee,
-                php_to_usdt_spinzo_fee: manualRates.phpToUsdtSpinzoFee,
-                php_to_usdt_gic_fee: manualRates.phpToUsdtGicFee,
-                is_active: manualRates.isActive
-            }
-        })
-        return newRate
+        if (existingRate) {
+            return await prisma.exchange_rates.update({
+                where: { id: existingRate.id },
+                data: rateData
+            })
+        } else {
+            return await prisma.exchange_rates.create({
+                data: rateData
+            })
+        }
     }
 
     // 1. Fetch live market rate (PHP -> USD/USDT)
@@ -102,27 +104,27 @@ export async function createExchangeRate(manualRates?: ManualRates) {
         usdtToPhpReferenceRate > 0 ? (usdtToPhpDiff / usdtToPhpReferenceRate) * 100 : 0
     )
 
-    // 5. Invalidate older active rates
-    await prisma.exchange_rates.updateMany({
-        where: { is_active: true },
-        data: { is_active: false }
-    })
+    const rateData = {
+        pair: "USDT/PHP",
+        usdt_to_php_reference_rate: usdtToPhpReferenceRate,
+        usdt_to_php_rate: usdtToPhpRate,
+        usdt_to_php_spread: usdtToPhpSpread,
+        usdt_to_php_spread_percentage: usdtToPhpSpreadPercentage,
+        php_to_usdt_reference_rate: phpToUsdtReferenceRate,
+        php_to_usdt_rate: phpToUsdtRate,
+        php_to_usdt_spread: phpToUsdtSpread,
+        php_to_usdt_spread_percentage: phpToUsdtSpreadPercentage,
+        is_active: true
+    }
 
-    // 6. Save the newly calculated rate
-    const newRate = await prisma.exchange_rates.create({
-        data: {
-            pair: "USDT/PHP",
-            usdt_to_php_reference_rate: usdtToPhpReferenceRate,
-            usdt_to_php_rate: usdtToPhpRate,
-            usdt_to_php_spread: usdtToPhpSpread,
-            usdt_to_php_spread_percentage: usdtToPhpSpreadPercentage,
-            php_to_usdt_reference_rate: phpToUsdtReferenceRate,
-            php_to_usdt_rate: phpToUsdtRate,
-            php_to_usdt_spread: phpToUsdtSpread,
-            php_to_usdt_spread_percentage: phpToUsdtSpreadPercentage,
-            is_active: true
-        }
-    })
-
-    return newRate
+    if (existingRate) {
+        return await prisma.exchange_rates.update({
+            where: { id: existingRate.id },
+            data: rateData
+        })
+    } else {
+        return await prisma.exchange_rates.create({
+            data: rateData
+        })
+    }
 }

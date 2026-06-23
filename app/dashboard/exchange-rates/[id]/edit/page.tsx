@@ -1,5 +1,5 @@
-import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { EditExchangeRateForm } from "./edit-form"
 
@@ -43,8 +43,6 @@ export default async function EditExchangeRatePage({
 
     isActive: rate.is_active || false,
   }
-
-  console.log({ serializedRate })
 
   return (
     <div className="flex flex-1 flex-col p-8 text-foreground dark:text-[#ededed]">

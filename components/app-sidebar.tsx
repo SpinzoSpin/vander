@@ -49,6 +49,10 @@ const data: { user: Record<string, string>; main: TNavMainData[] } = {
           name: "Networks",
           url: "/dashboard/networks",
         },
+        {
+          name: "Notifier",
+          url: "/dashboard/notifier",
+        },
       ],
     },
     {

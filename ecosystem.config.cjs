@@ -8,5 +8,10 @@ module.exports = {
         NODE_OPTIONS: '--no-deprecation',
       },
     },
+    {
+      name: 'updater',
+      script: 'server.js',
+      interpreter: 'bun',
+    },
   ],
 }

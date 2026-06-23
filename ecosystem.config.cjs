@@ -9,12 +9,9 @@ module.exports = {
       },
     },
     {
-      name: 'worker',
-      script: 'node_modules/.bin/tsx',
-      args: 'src/worker/index.ts',
-      env: {
-        NODE_OPTIONS: '--no-deprecation',
-      },
+      name: 'updater',
+      script: 'server.js',
+      interpreter: 'bun',
     },
   ],
 }

@@ -1,17 +1,22 @@
-import { withPayload } from '@payloadcms/next/withPayload'
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Your Next.js config here
-  webpack: (webpackConfig) => {
-    webpackConfig.resolve.extensionAlias = {
-      '.cjs': ['.cts', '.cjs'],
-      '.js': ['.ts', '.tsx', '.js', '.jsx'],
-      '.mjs': ['.mts', '.mjs'],
+    // compiler: {
+    //     removeConsole: process.env.NODE_ENV === 'production',
+    // },
+    async redirects() {
+        return [
+            {
+                source: '/',
+                destination: '/dashboard',
+                permanent: true, // Use false (307) for temporary or true (308) for permanent
+            },
+        ]
+    },
+    experimental: {
+        serverActions: {
+            allowedOrigins: []
+        }
     }
-
-    return webpackConfig
-  },
 }
 
-export default withPayload(nextConfig, { devBundleServerPackages: false })
+export default nextConfig

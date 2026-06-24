@@ -6,6 +6,7 @@ import { z } from "zod"
 import { Role } from "@/generated/prisma"
 import { auth } from "@/auth/auth"
 import { revalidatePath } from "next/cache"
+import { randomUUID } from "crypto"
 
 const createUserSchema = z.object({
   email: z.string().email("Email is required"),
@@ -143,6 +144,33 @@ export async function deleteUserAction(userId: string) {
     return { success: true }
   } catch (error) {
     console.log({ error }, "Failed to delete user")
+    return { error: "Something went wrong" }
+  }
+}
+
+// ─── Rotate API Key ─────────────────────────────────────────────────────────────
+
+export async function rotateApiKeyAction(userId: string) {
+  try {
+    const session = await auth()
+    const currentRole = (session?.user as any)?.role?.toLowerCase()
+
+    if (currentRole !== "admin") {
+      return { error: "Forbidden: You do not have permission to rotate API keys" }
+    }
+
+    const newApiKey = randomUUID()
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { apiKey: newApiKey },
+    })
+
+    revalidatePath("/dashboard/users")
+
+    return { success: true, apiKey: newApiKey }
+  } catch (error) {
+    console.log({ error }, "Failed to rotate API key")
     return { error: "Something went wrong" }
   }
 }

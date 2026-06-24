@@ -38,7 +38,7 @@ import {
   Delete02Icon,
   Alert02Icon,
 } from "@hugeicons/core-free-icons"
-import { updateUserAction, deleteUserAction } from "@/actions/users"
+import { updateUserAction, deleteUserAction, rotateApiKeyAction } from "@/actions/users"
 
 export interface User {
   id: string
@@ -56,10 +56,12 @@ interface UsersTableProps {
 // ─── API Key Reveal Cell ──────────────────────────────────────────────────────
 // Renders a button in the table that opens a dialog/modal to reveal the API key.
 
-function ApiKeyCell({ apiKey }: { apiKey?: string }) {
+function ApiKeyCell({ user }: { user: User }) {
   const [open, setOpen] = useState(false)
   const [revealed, setRevealed] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [isRotating, startRotationTransition] = useTransition()
+  const router = useRouter()
 
   const handleOpen = () => {
     setOpen(true)
@@ -68,13 +70,28 @@ function ApiKeyCell({ apiKey }: { apiKey?: string }) {
   }
 
   const handleCopy = async () => {
-    if (!apiKey) return
-    await navigator.clipboard.writeText(apiKey)
+    if (!user.apiKey) return
+    await navigator.clipboard.writeText(user.apiKey)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  if (!apiKey) {
+  const handleRotate = () => {
+    if (confirm("Are you sure you want to rotate this user's API key? Any existing integration using the old key will stop working.")) {
+      startRotationTransition(async () => {
+        const res = await rotateApiKeyAction(user.id)
+        if (res.error) {
+          toast.error(res.error)
+        } else {
+          toast.success("API key rotated successfully")
+          setRevealed(true) // Auto-reveal the newly rotated key
+          router.refresh()
+        }
+      })
+    }
+  }
+
+  if (!user.apiKey) {
     return (
       <span className="text-xs text-[#4e4e4e] italic">No key</span>
     )
@@ -109,31 +126,43 @@ function ApiKeyCell({ apiKey }: { apiKey?: string }) {
                 <input
                   type="text"
                   readOnly
-                  value={apiKey}
+                  value={user.apiKey}
                   className={`w-full font-mono text-sm px-3 py-2 bg-muted/40 dark:bg-[#0a0a0a] border border-border dark:border-[#282828] rounded-md text-center transition-all ${
                     revealed ? "" : "blur-md select-none"
                   }`}
                 />
               </div>
-              <div className="flex gap-3 w-full">
+              <div className="flex flex-col gap-2 w-full">
+                <div className="flex gap-3 w-full">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 border-border dark:border-[#282828] hover:bg-muted/50 dark:hover:bg-[#1a1a1a]"
+                    onClick={() => setRevealed(!revealed)}
+                  >
+                    <HugeiconsIcon icon={revealed ? ViewOffIcon : ViewIcon} className="mr-2" size={16} />
+                    {revealed ? "Hide Key" : "Reveal Key"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    disabled={!revealed}
+                    className="flex-1"
+                    onClick={handleCopy}
+                  >
+                    <HugeiconsIcon icon={copied ? CheckmarkCircle01Icon : Copy01Icon} className="mr-2" size={16} />
+                    {copied ? "Copied" : "Copy Key"}
+                  </Button>
+                </div>
                 <Button
                   type="button"
-                  variant="outline"
-                  className="flex-1 border-border dark:border-[#282828] hover:bg-muted/50 dark:hover:bg-[#1a1a1a]"
-                  onClick={() => setRevealed(!revealed)}
+                  variant="destructive"
+                  className="w-full border border-red-800/30 hover:bg-red-600/90"
+                  disabled={isRotating}
+                  onClick={handleRotate}
                 >
-                  <HugeiconsIcon icon={revealed ? ViewOffIcon : ViewIcon} className="mr-2" size={16} />
-                  {revealed ? "Hide Key" : "Reveal Key"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="default"
-                  disabled={!revealed}
-                  className="flex-1"
-                  onClick={handleCopy}
-                >
-                  <HugeiconsIcon icon={copied ? CheckmarkCircle01Icon : Copy01Icon} className="mr-2" size={16} />
-                  {copied ? "Copied" : "Copy Key"}
+                  <HugeiconsIcon icon={Shield01Icon} className="mr-2" size={16} />
+                  {isRotating ? "Rotating..." : "Rotate API Key"}
                 </Button>
               </div>
             </div>
@@ -149,6 +178,7 @@ function ApiKeyCell({ apiKey }: { apiKey?: string }) {
 function EditUserDialog({ user }: { user: User }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -163,13 +193,14 @@ function EditUserDialog({ user }: { user: User }) {
       } else {
         toast.success("User updated successfully")
         setOpen(false)
+        setShowPassword(false)
         router.refresh()
       }
     })
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) setShowPassword(false); }}>
       <Button
         variant="ghost"
         size="icon"
@@ -208,20 +239,32 @@ function EditUserDialog({ user }: { user: User }) {
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent className="bg-background dark:bg-[#121212] border-border dark:border-[#1e1e1e] text-foreground dark:text-white">
-                  <SelectItem value="USER">User</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="gic">GIC</SelectItem>
+                  <SelectItem value="lotto">Lotto</SelectItem>
+                  <SelectItem value="arca">Arca</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-foreground dark:text-[#ededed] text-xs font-semibold">New Password (Optional)</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Leave blank to keep current"
-                className="bg-muted/40 dark:bg-[#0a0a0a] border-border dark:border-[#282828] text-foreground dark:text-[#ededed] focus:ring-1 focus:ring-primary"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Leave blank to keep current"
+                  className="bg-muted/40 dark:bg-[#0a0a0a] border-border dark:border-[#282828] text-foreground dark:text-[#ededed] focus:ring-1 focus:ring-primary pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                >
+                  <HugeiconsIcon icon={showPassword ? ViewIcon : ViewOffIcon} size={16} />
+                </button>
+              </div>
             </div>
           </div>
           <DialogFooter className="p-0 border-t-0 flex justify-end gap-2">
@@ -335,7 +378,7 @@ const columns: ColumnDef<User>[] = [
   {
     accessorKey: "apiKey",
     header: "API KEY",
-    cell: ({ row }) => <ApiKeyCell apiKey={row.original.apiKey} />,
+    cell: ({ row }) => <ApiKeyCell user={row.original} />,
   },
   {
     accessorKey: "updatedAt",

@@ -162,7 +162,7 @@ model exchange_rates {
   usdt_to_php_gic_fee           Decimal?       @default(0) @db.Decimal
   php_to_usdt_gic_fee           Decimal?       @default(0) @db.Decimal
   is_active                     Boolean?       @default(true)
-  updated_at                    DateTime       @default(now()) @db.Timestamptz(3)
+  updated_at                    DateTime       @updatedAt @default(now()) @db.Timestamptz(3)
   created_at                    DateTime       @default(now()) @db.Timestamptz(3)
   usdt_to_php_reference_rate    Decimal        @db.Decimal
   usdt_to_php_spread            Decimal?       @db.Decimal

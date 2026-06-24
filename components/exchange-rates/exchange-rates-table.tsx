@@ -51,8 +51,9 @@ const columns: ColumnDef<ExchangeRate>[] = [
       const active = row.getValue("active") as boolean
       return (
         <span
-          className={`text-xs font-medium ${active ? "text-[#83b047]" : "text-[#4e4e4e]"
-            }`}
+          className={`text-xs font-medium ${
+            active ? "text-[#83b047]" : "text-[#4e4e4e]"
+          }`}
         >
           {active ? "Active" : "Inactive"}
         </span>
@@ -133,7 +134,13 @@ const columns: ColumnDef<ExchangeRate>[] = [
       </span>
     ),
   },
-
+  {
+    accessorKey: "lastUpdatedAt",
+    header: "Last Updated at",
+    cell: ({ row }) => (
+      <span>{new Date(row.getValue("lastUpdatedAt")).toLocaleString()}</span>
+    ),
+  },
   {
     id: "actions",
     cell: ({ row }) => <ExchangeRateActions row={row} />,
@@ -211,6 +218,8 @@ export function ExchangeRatesTable({
     },
     initialData,
   })
+
+  console.log({ data })
 
   return (
     <DataTable

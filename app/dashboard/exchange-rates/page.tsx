@@ -1,16 +1,15 @@
-import type { Metadata } from "next"
-import { Suspense } from "react"
-import { ActionsContainer } from "@/components/actions-container"
 import {
   ExchangeRatesTable,
   type ExchangeRate,
 } from "@/components/exchange-rates"
 import { Button } from "@/components/ui/button"
+import type { Metadata } from "next"
+import { Suspense } from "react"
 
+import { getExchangeRates } from "@/services/exchange-rates/get-rates"
 import { Add01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { getExchangeRates } from "@/services/exchange-rates/get-rates"
 
 import { auth } from "@/auth/auth"
 import { redirect } from "next/navigation"
@@ -57,6 +56,7 @@ export default async function Page(props: {
     phpUsdtSpinzoFee: r.php_to_usdt_spinzo_fee?.toString() || "0",
     phpUsdtGicFee: r.php_to_usdt_gic_fee?.toString() || "0",
     active: r.is_active || false,
+    lastUpdatedAt: r.updated_at,
   }))
 
   return (

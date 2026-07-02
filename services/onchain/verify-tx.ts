@@ -70,7 +70,7 @@ export async function verifyAndProcessOnchainTransaction(
     const usdtContractAddress = network.usdt_contract_address
     const usdtDecimals = Number(network.usdt_decimals || 6)
     const expectedAmount = Number(t.amount_usdt || 0)
-    let txHash = t.tx_hash?.trim()
+    const txHash = t.tx_hash?.trim()
     let detectedTxHash: string | undefined = txHash || undefined
 
     let isVerifiedOnchain = false
@@ -152,7 +152,13 @@ export async function verifyAndProcessOnchainTransaction(
     })
 
     logger.info(
-      { transactionId, status: "crypto_arrival", notes: updatedNotes, txHash: detectedTxHash, expectedAmount },
+      {
+        transactionId,
+        status: "crypto_arrival",
+        notes: updatedNotes,
+        txHash: detectedTxHash,
+        expectedAmount,
+      },
       `Transaction #${transactionId} verified onchain with matching amount ${expectedAmount} USDT and marked as Crypto Arrived.`
     )
 
@@ -166,7 +172,10 @@ export async function verifyAndProcessOnchainTransaction(
         Number(t.type === "fiat_to_crypto" ? t.amount_php : t.amount_usdt)
       )
       redis.del(key).catch((err) => {
-        logger.error({ err, transactionId, key }, `Failed to release dedupe key for transaction #${transactionId}`)
+        logger.error(
+          { err, transactionId, key },
+          `Failed to release dedupe key for transaction #${transactionId}`
+        )
       })
     }
 
@@ -279,7 +288,10 @@ async function verifyTxHashOnchain({
 
         // Amount verification
         if (expectedAmount > 0) {
-          const transferredAmount = parseErc20TransferAmount(log.data, usdtDecimals)
+          const transferredAmount = parseErc20TransferAmount(
+            log.data,
+            usdtDecimals
+          )
           const diff = Math.abs(transferredAmount - expectedAmount)
           if (diff > 0.01) {
             return false
@@ -325,7 +337,15 @@ async function findUnclaimedOnchainTransferHash({
 
   if (
     category === "evm" ||
-    ["eth", "bep20", "polygon", "arbitrum", "base", "optimism", "avalanche"].includes(symbol)
+    [
+      "eth",
+      "bep20",
+      "polygon",
+      "arbitrum",
+      "base",
+      "optimism",
+      "avalanche",
+    ].includes(symbol)
   ) {
     const cleanAddress = walletAddress.startsWith("0x")
       ? walletAddress.slice(2).toLowerCase()
@@ -389,7 +409,10 @@ async function findUnclaimedOnchainTransferHash({
 
         // 1. Amount Verification Check
         if (expectedAmount > 0) {
-          const transferredAmount = parseErc20TransferAmount(log.data, usdtDecimals)
+          const transferredAmount = parseErc20TransferAmount(
+            log.data,
+            usdtDecimals
+          )
           const diff = Math.abs(transferredAmount - expectedAmount)
           if (diff > 0.01) {
             // Transferred amount does NOT match created exchange expected amount -> Skip!

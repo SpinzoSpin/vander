@@ -106,6 +106,7 @@ export function mapTransaction(t: any, role: string) {
       targetAddress: t.target_address || "-",
       treasuryAddress: t.treasury?.wallet_address || "-",
       networkSymbol: t.treasury?.network?.symbol?.toLowerCase() || "",
+      networkType: t.treasury?.network?.network_type || "mainnet",
       txHash: t.tx_hash || "-",
       bankDetails: t.bank_details ? (() => { try { return JSON.parse(t.bank_details) } catch { return null } })() : null,
       invoiceUrl: t.invoiceMedia?.url || null,

@@ -130,6 +130,7 @@ model transactions {
   applied_rate_snapshot               Decimal?                 @db.Decimal
   created_by_user_id                  String?
   dedupe_expires_at                   DateTime?                @db.Timestamptz(3)
+  telegram_message_ids                String?                  @db.VarChar
   exchange_rate                       exchange_rates?          @relation(fields: [exchange_rate_id], references: [id], onDelete: SetNull)
   created_by                          User?                    @relation(fields: [created_by_user_id], references: [id], onDelete: SetNull)
 }

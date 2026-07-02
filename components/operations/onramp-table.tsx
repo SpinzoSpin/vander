@@ -52,6 +52,7 @@ export interface OnrampTransaction {
   targetAddress: string
   treasuryAddress: string
   networkSymbol?: string
+  networkType?: string
   txHash: string
   createdAt: string
   lastUpdated: string
@@ -211,7 +212,8 @@ const baseColumns: ColumnDef<OnrampTransaction>[] = [
     cell: ({ row }) => {
       const tx = row.getValue("txHash") as string
       const networkSymbol = row.original.networkSymbol || "ETH"
-      const explorerUrl = getExplorerTxUrl(networkSymbol, tx)
+      const networkType = row.original.networkType || "mainnet"
+      const explorerUrl = getExplorerTxUrl(networkSymbol, tx, networkType)
       const explorerName = getExplorerName(networkSymbol)
 
       if (!tx || tx === "-") {

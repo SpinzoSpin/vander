@@ -66,6 +66,54 @@ async function fetchFullTransaction(transactionId: number) {
   }
 }
 
+function getReadableEventTime(t: any): string {
+  const eventTime = t.updated_at ? new Date(t.updated_at) : new Date()
+  return eventTime.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Manila",
+  })
+}
+
+function getExplorerUrl(t: any): string | null {
+  const networkSymbol = t.treasury?.network?.symbol || ""
+  const networkType = t.treasury?.network?.network_type || "mainnet"
+  const rawTxHash = t.tx_hash?.trim()
+  if (!rawTxHash || rawTxHash === "-") return null
+  return getExplorerTxUrl(networkSymbol, rawTxHash, networkType)
+}
+
+function getTxHashDisplay(t: any): string {
+  const rawTxHash = t.tx_hash?.trim()
+  if (!rawTxHash || rawTxHash === "-") return "N/A"
+
+  const explorerUrl = getExplorerUrl(t)
+  return explorerUrl
+    ? `<a href="${explorerUrl}"><code>${rawTxHash}</code></a>`
+    : `<code>${rawTxHash}</code>`
+}
+
+// Short follow-up reply for crypto_arrival: only what wasn't already in the pending
+// message (amounts, rates, bank/target details, order id are all up there already).
+function formatCryptoArrivalReplyMessage(t: any): string {
+  const explorerUrl = getExplorerUrl(t)
+  const scannerLine = explorerUrl
+    ? `<b>Scanner URL:</b> <a href="${explorerUrl}">View on Explorer</a>\n`
+    : ""
+
+  return (
+    `✅ <b>Crypto Arrived — Verified Onchain</b>\n\n` +
+    `<b>Tx Hash:</b> ${getTxHashDisplay(t)}\n` +
+    scannerLine +
+    `<b>Verified At:</b> <code>${getReadableEventTime(t)} (PHT)</code>`
+  )
+}
+
 function formatTransactionMessage(t: any): string {
   const isFiatToCrypto = t.type === "fiat_to_crypto"
   const amountUsdt = Number(t.amount_usdt || 0)
@@ -127,17 +175,17 @@ function formatTransactionMessage(t: any): string {
     t.status === "crypto_arrival"
 
   const onchainBadge = isOnchainVerified
-    ? "🟢 <b>VERIFIED ONCHAIN</b> ✅"
-    : "🟡 <b>UNVERIFIED / PENDING ONCHAIN</b> ⏳"
+    ? "<b>VERIFIED ONCHAIN</b> ✅"
+    : "<b>UNVERIFIED / PENDING ONCHAIN</b> ⏳"
 
   const statusEmoji =
     {
-      pending: "🟡 ⏳ Pending",
-      confirmed: "🔵 ✅ Confirmed",
-      processing: "🟣 ⚙️ Processing",
-      complete: "🟢 🎉 Complete",
-      fiat_arrival: "💵 🟢 Fiat Arrived",
-      crypto_arrival: "🟢 ✅ <b>Crypto Arrived (Onchain Verified)</b>",
+      pending: "⏳ Pending",
+      confirmed: "✅ Confirmed",
+      processing: "⚙️ Processing",
+      complete: "🎉 Complete",
+      fiat_arrival: "💵 Fiat Arrived",
+      crypto_arrival: "✅ <b>Crypto Arrived (Onchain Verified)</b>",
     }[t.status as string] || t.status
 
   // Generate Admin Panel Link
@@ -191,38 +239,14 @@ function formatTransactionMessage(t: any): string {
       `<b>Payout Bank Account (Lotto):</b>${payoutBankStr}\n`
   }
 
-  const eventTime = t.updated_at ? new Date(t.updated_at) : new Date()
-  const readableEventTime = eventTime.toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Manila",
-  })
-
-  const networkSymbol = t.treasury?.network?.symbol || ""
-  const rawTxHash = t.tx_hash?.trim()
-  let txHashDisplay = "N/A"
-  if (rawTxHash && rawTxHash !== "-") {
-    const explorerUrl = getExplorerTxUrl(networkSymbol, rawTxHash)
-    if (explorerUrl) {
-      txHashDisplay = `<a href="${explorerUrl}"><code>${rawTxHash}</code></a>`
-    } else {
-      txHashDisplay = `<code>${rawTxHash}</code>`
-    }
-  }
-
   return (
     `<b>🆕 Transaction Notification</b>\n\n` +
     `<b>Order ID:</b> <code>${t.order_id || t.id}</code>\n` +
     `<b>Type:</b> ${typeStr}\n` +
     `<b>Status:</b> ${statusEmoji}\n` +
     `<b>Onchain Verification:</b> ${onchainBadge}\n` +
-    `<b>Tx Hash:</b> ${txHashDisplay}\n` +
-    `<b>Event Time:</b> 📅 <code>${readableEventTime} (PHT)</code>\n\n` +
+    `<b>Tx Hash:</b> ${getTxHashDisplay(t)}\n` +
+    `<b>Event Time:</b> <code>${getReadableEventTime(t)} (PHT)</code>\n\n` +
     `<b>Amount Sent:</b> ${isFiatToCrypto ? `₱${amountPhp.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : `${amountUsdt.toFixed(6)} USDT`}\n` +
     `<b>Amount Received:</b> ${isFiatToCrypto ? `${amountUsdt.toFixed(6)} USDT` : `₱${amountPhp.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}\n` +
     `<b>Reference Rate:</b> ${displayRate}\n\n` +
@@ -311,11 +335,28 @@ export async function sendTelegramNotification(transactionId: number) {
       return
     }
 
-    const messageText = formatTransactionMessage(t)
+    const fullMessageText = formatTransactionMessage(t)
+    const shortReplyText =
+      t.status === "crypto_arrival" ? formatCryptoArrivalReplyMessage(t) : null
     const replyMarkup = getReplyMarkupForStatus(t)
+
+    let messageIds: Record<string, number> = {}
+    try {
+      messageIds = t.telegram_message_ids ? JSON.parse(t.telegram_message_ids) : {}
+    } catch (e) {
+      messageIds = {}
+    }
+
+    let messageIdsChanged = false
 
     for (const chatId of chatIds) {
       const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`
+      const originalMessageId = messageIds[chatId]
+      // Threading under an existing pending message: send the short follow-up
+      // instead of repeating everything that message already shows.
+      const messageText =
+        shortReplyText && originalMessageId ? shortReplyText : fullMessageText
+
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -324,6 +365,11 @@ export async function sendTelegramNotification(transactionId: number) {
           text: messageText,
           parse_mode: "HTML",
           reply_markup: replyMarkup || undefined,
+          // Reply to the original "pending" notification instead of posting a fresh
+          // message, so the success (crypto_arrival) update threads under it.
+          ...(originalMessageId
+            ? { reply_to_message_id: originalMessageId, allow_sending_without_reply: true }
+            : {}),
         }),
       })
 
@@ -332,7 +378,25 @@ export async function sendTelegramNotification(transactionId: number) {
           `Failed to send Telegram message to ${chatId}:`,
           await response.text()
         )
+        continue
       }
+
+      // Remember the first (pending) message per chat so later status updates can reply to it.
+      if (!originalMessageId) {
+        const data = await response.json()
+        const sentMessageId = data?.result?.message_id
+        if (sentMessageId) {
+          messageIds[chatId] = sentMessageId
+          messageIdsChanged = true
+        }
+      }
+    }
+
+    if (messageIdsChanged) {
+      await prisma.transactions.update({
+        where: { id: transactionId },
+        data: { telegram_message_ids: JSON.stringify(messageIds) },
+      })
     }
   } catch (e) {
     console.error("Error sending Telegram notification:", e)

@@ -28,6 +28,7 @@ export const POST = withErrorHandler(async (req) => {
 
     // 3. Delegate to Service (which handles Resource Resolution & Transaction Creation)
     const result = await createExchangeTransaction({
+        userId: authResult.user!.id!,
         type: parsedData.type,
         amount: parsedData.amount,
         networkId: parsedData.network,

@@ -13,5 +13,10 @@ module.exports = {
       script: 'server.js',
       interpreter: 'bun',
     },
+    {
+      name: 'onchain-worker',
+      script: 'services/workers/onchain-worker.ts',
+      interpreter: 'bun',
+    },
   ],
 }

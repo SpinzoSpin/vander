@@ -36,6 +36,8 @@ export const POST = withErrorHandler(async (req: NextRequest, props: { params: P
     return badRequest("txHash must be a non-empty string")
   }
 
+  const cleanTxHash = txHash.trim()
+
   // Verify the transaction exists
   const transaction = await prisma.transactions.findFirst({
     where: { order_id: orderId },
@@ -45,14 +47,37 @@ export const POST = withErrorHandler(async (req: NextRequest, props: { params: P
     return badRequest("Transaction not found")
   }
 
+  // Check for duplication: Ensure txHash is not already claimed by another transaction
+  const duplicateTx = await prisma.transactions.findFirst({
+    where: {
+      tx_hash: cleanTxHash,
+      NOT: { id: transaction.id },
+    },
+  })
+
+  if (duplicateTx) {
+    return badRequest(
+      `Transaction hash "${cleanTxHash}" has already been submitted for transaction #${duplicateTx.id}`
+    )
+  }
+
   // Update the transaction with the tx hash
   const updated = await prisma.transactions.update({
     where: { id: transaction.id },
     data: {
-      tx_hash: txHash.trim(),
+      tx_hash: cleanTxHash,
       updated_at: new Date(),
     },
   })
+
+  // Trigger BullMQ worker verification asynchronously
+  import("@/services/queues/onchain-queue")
+    .then(({ enqueueOnchainTxWatch }) => {
+      enqueueOnchainTxWatch(updated.id)
+    })
+    .catch((err) => {
+      console.error("Failed to enqueue transaction in BullMQ:", err)
+    })
 
   return successResponse(
     { id: updated.id, txHash: updated.tx_hash },

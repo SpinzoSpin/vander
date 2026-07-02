@@ -30,6 +30,7 @@ model User {
   Authenticator Authenticator[]
   sessions      Session[]
   apiKey        String?         @unique @default(uuid())
+  transactions  transactions[]
 }
 
 model Account {
@@ -127,7 +128,10 @@ model transactions {
   rate_snapshot                       Decimal?                 @db.Decimal
   reference_rate_snapshot             Decimal?                 @db.Decimal
   applied_rate_snapshot               Decimal?                 @db.Decimal
+  created_by_user_id                  String?
+  dedupe_expires_at                   DateTime?                @db.Timestamptz(3)
   exchange_rate                       exchange_rates?          @relation(fields: [exchange_rate_id], references: [id], onDelete: SetNull)
+  created_by                          User?                    @relation(fields: [created_by_user_id], references: [id], onDelete: SetNull)
 }
 
 enum enum_networks_network_category {

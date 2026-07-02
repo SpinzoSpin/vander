@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma"
 import { getExplorerTxUrl } from "@/lib/explorer"
+import { prisma } from "@/lib/prisma"
 import fs from "fs"
 import path from "path"
 
@@ -108,9 +108,10 @@ function formatCryptoArrivalReplyMessage(t: any): string {
 
   return (
     `✅ <b>Crypto Arrived — Verified Onchain</b>\n\n` +
+    `<b>Order ID:</b> <code>${t.order_id || t.id}</code>\n` +
     `<b>Tx Hash:</b> ${getTxHashDisplay(t)}\n` +
     scannerLine +
-    `<b>Verified At:</b> <code>${getReadableEventTime(t)} (PHT)</code>`
+    `<b>Received At:</b> <code>${getReadableEventTime(t)} (PHT)</code>`
   )
 }
 
@@ -240,7 +241,7 @@ function formatTransactionMessage(t: any): string {
   }
 
   return (
-    `<b>🆕 Transaction Notification</b>\n\n` +
+    `<b>🟡 🆕 Transaction Notification</b>\n\n` +
     `<b>Order ID:</b> <code>${t.order_id || t.id}</code>\n` +
     `<b>Type:</b> ${typeStr}\n` +
     `<b>Status:</b> ${statusEmoji}\n` +
@@ -257,7 +258,6 @@ function formatTransactionMessage(t: any): string {
     `<b>Network:</b> ${t.treasury?.network?.symbol || "N/A"}\n\n` +
     `🔗 <a href="${transactionLink}"><b>View in Admin Panel</b></a>`
   )
-
 }
 
 function getReplyMarkupForStatus(t: any) {
@@ -342,7 +342,9 @@ export async function sendTelegramNotification(transactionId: number) {
 
     let messageIds: Record<string, number> = {}
     try {
-      messageIds = t.telegram_message_ids ? JSON.parse(t.telegram_message_ids) : {}
+      messageIds = t.telegram_message_ids
+        ? JSON.parse(t.telegram_message_ids)
+        : {}
     } catch (e) {
       messageIds = {}
     }
@@ -368,7 +370,10 @@ export async function sendTelegramNotification(transactionId: number) {
           // Reply to the original "pending" notification instead of posting a fresh
           // message, so the success (crypto_arrival) update threads under it.
           ...(originalMessageId
-            ? { reply_to_message_id: originalMessageId, allow_sending_without_reply: true }
+            ? {
+                reply_to_message_id: originalMessageId,
+                allow_sending_without_reply: true,
+              }
             : {}),
         }),
       })

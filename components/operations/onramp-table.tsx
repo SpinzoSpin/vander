@@ -41,6 +41,7 @@ export interface OnrampTransaction {
   | "complete"
   | "fiat_arrival"
   | "crypto_arrival"
+  | "failed"
   totalAmountSent: string
   totalReceived: string
   profitUsdt: string

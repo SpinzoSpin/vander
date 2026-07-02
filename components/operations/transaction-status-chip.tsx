@@ -6,6 +6,7 @@ import {
   PackageDeliveredIcon,
   Alert02Icon,
   ArrowDownRightIcon,
+  CancelCircleIcon,
 } from "@hugeicons/core-free-icons"
 
 import { cn } from "@/lib/utils"
@@ -18,6 +19,7 @@ type TransactionStatus =
   | "fiat_arrival"
   | "crypto_arrival"
   | "user_processing"
+  | "failed"
 
 interface StatusConfig {
   label: string
@@ -68,6 +70,12 @@ const STATUS_MAP: Record<TransactionStatus, StatusConfig> = {
     color: "text-[#f7d060]",
     bgColor: "bg-[#f7d060]/10 border-[#f7d060]/20",
     icon: ArrowDownRightIcon,
+  },
+  failed: {
+    label: "Failed",
+    color: "text-[#e05252]",
+    bgColor: "bg-[#e05252]/10 border-[#e05252]/20",
+    icon: CancelCircleIcon,
   },
 }
 

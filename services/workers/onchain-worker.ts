@@ -1,4 +1,5 @@
 import { logger } from "@/lib/logger"
+import { prisma } from "@/lib/prisma"
 import { redisConnection } from "@/lib/redis"
 import { verifyAndProcessOnchainTransaction } from "@/services/onchain/verify-tx"
 import {
@@ -59,11 +60,39 @@ export function startOnchainWorker() {
     )
   })
 
-  worker.on("failed", (job, err) => {
+  worker.on("failed", async (job, err) => {
     logger.warn(
       { jobId: job?.id, error: err.message },
       `[BullMQ Worker] Job ${job?.id} failed attempt.`
     )
+
+    if (!job) return
+
+    // Only act once retries are exhausted (the watch window, tied to dedupe_expires_at,
+    // has fully lapsed) — not on every individual failed attempt.
+    const attemptsLimit = job.opts.attempts ?? 1
+    if (job.attemptsMade < attemptsLimit) return
+
+    const { transactionId } = job.data
+    try {
+      // No Telegram notification here on purpose — only "pending" (creation) and
+      // "crypto_arrival" (verified onchain) should ever notify.
+      const { count } = await prisma.transactions.updateMany({
+        where: { id: transactionId, status: { in: ["pending", "confirmed"] } },
+        data: { status: "failed", updated_at: new Date() },
+      })
+      if (count > 0) {
+        logger.info(
+          { transactionId },
+          `[BullMQ Worker] Tx #${transactionId} watch window expired without onchain verification. Marked as failed.`
+        )
+      }
+    } catch (e) {
+      logger.error(
+        { e, transactionId },
+        `[BullMQ Worker] Failed to mark tx #${transactionId} as failed after expiration.`
+      )
+    }
   })
 
   worker.on("error", (err) => {

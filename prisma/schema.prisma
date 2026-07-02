@@ -200,6 +200,7 @@ enum enum_transactions_status {
   complete
   fiat_arrival
   crypto_arrival
+  failed
 }
 
 enum enum_transactions_type {
